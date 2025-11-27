@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Osnabrück: Koloniales Erbe</title>
+    <title>Osnabrück - ein kolonialgeschichtlicher Rundgang</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -92,6 +92,7 @@
         /* Typography für langen Text */
         .prose p { margin-bottom: 1rem; line-height: 1.7; color: #374151; }
         .prose h4 { margin-top: 1.5rem; margin-bottom: 0.5rem; font-weight: bold; color: #1f2937; }
+        .prose blockquote { border-left: 4px solid #ea580c; padding-left: 1rem; font-style: italic; color: #4b5563; margin: 1.5rem 0; }
     </style>
 </head>
 <body class="bg-gray-100 flex flex-col md:flex-row h-screen w-screen overflow-hidden" id="main-container">
@@ -134,13 +135,13 @@
                     </div>
                     <div>
                         <h1 class="text-gray-900 font-bold text-sm uppercase tracking-wider">Osnabrück</h1>
-                        <p class="text-xs text-gray-500 font-medium">Spuren des kolonialen Erbes</p>
+                        <p class="text-xs text-gray-500 font-medium">ein kolonialgeschichtlicher Rundgang</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ROUTEN PLANER PANEL (NEU - LINKS OBEN) -->
+        <!-- ROUTEN PLANER PANEL -->
         <div class="absolute top-24 left-4 z-[500] max-w-[260px] md:max-w-[300px]">
             <div class="bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-lg border border-gray-200">
                 <h3 class="text-gray-800 font-bold text-sm mb-2 flex items-center gap-2">
@@ -166,6 +167,11 @@
             </div>
         </div>
 
+        <!-- Button: Zurück zur Straßenkarte (erscheint nur im Drohnen-Modus) -->
+        <button id="btn-reset-view" onclick="resetMapType()" class="hidden absolute top-24 right-4 z-[500] bg-white text-gray-800 p-3 rounded-lg shadow-lg font-bold text-xs border border-gray-300 flex items-center gap-2 hover:bg-gray-50 transition-all">
+            <i class="fa-solid fa-map"></i> Karte zurücksetzen
+        </button>
+
         <!-- Controls Bottom Right -->
         <div class="absolute bottom-8 right-4 z-[500] flex flex-col gap-3">
             <button onclick="locateUser()" class="bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110" title="Mein Standort">
@@ -183,7 +189,7 @@
     <aside id="sidebar" class="w-full md:w-[320px] bg-white border-l border-gray-200 z-20 flex-shrink-0 order-3 shadow-xl flex flex-col" style="min-width: 250px; max-width: 800px;">
         <div class="p-6 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
             <h2 class="text-xl font-bold text-gray-800">Stationen</h2>
-            <p class="text-sm text-gray-500 mt-1">Ein Rundgang durch die Geschichte</p>
+            <p class="text-sm text-gray-500 mt-1">Entdecke die unsichtbare Geschichte</p>
         </div>
         
         <div id="tile-container" class="p-4 space-y-4 pb-20">
@@ -200,59 +206,50 @@
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
     <script>
-        // --- 1. DATEN ---
+        // --- 1. DATEN: Museumsquartier & Schlossgarten ---
         const tourStops = [
             {
-                title: "Rathaus des Westfälischen Friedens",
-                lat: 52.2768, 
-                lng: 8.0425,
-                desc: "Ein Ort historischer Entscheidungen. Der Westfälische Frieden beendete den Dreißigjährigen Krieg.",
+                title: "Museumsquartier (Stadtgeschichtliches Museum)",
+                lat: 52.2742,
+                lng: 8.0435,
+                desc: "Startpunkt des Rundgangs. Das Museumsquartier vereint Kunst und Geschichte. Auch hier finden sich Spuren globaler Verflechtungen.",
                 longText: `
-                    <p>Das Osnabrücker Rathaus ist vor allem als Stätte des Westfälischen Friedens bekannt. Doch der Friedensschluss von 1648 hatte nicht nur europäische, sondern globale Dimensionen.</p>
-                    <h4>Diplomatie und Welthandel</h4>
-                    <p>Mit der Neuordnung Europas wurden auch die Weichen für die koloniale Expansion gestellt. Die Niederlande, deren Unabhängigkeit hier bestätigt wurde, stiegen im Anschluss zu einer der führenden Kolonialmächte auf.</p>
-                    <p>Im Friedenssaal hängen die Porträts der Gesandten. Viele ihrer Familien waren direkt oder indirekt in den frühen Fernhandel involviert, der oft auf Ausbeutung basierte.</p>
-                    <h4>Spuren im Heute</h4>
-                    <p>Heute dient das Rathaus als Mahnmal für den Frieden, lädt aber auch dazu ein, die eurozentrische Sicht auf diesen Frieden kritisch zu hinterfragen.</p>
+                    <p>Willkommen am Startpunkt des Rundgangs: dem Museumsquartier Osnabrück.</p>
+                    <h4>Geschichte bewahren und hinterfragen</h4>
+                    <p>Das Stadtgeschichtliche Museum (Kulturgeschichtliches Museum) bewahrt nicht nur lokale Artefakte, sondern auch Objekte, die durch globale Handelsbeziehungen nach Osnabrück gelangten.</p>
+                    <p>Museen sind heute wichtige Orte der Aufarbeitung: Wie sind Objekte in die Sammlung gekommen? Welche kolonialen Machtstrukturen spielten eine Rolle? Hier beginnt die Spurensuche nach dem kolonialen Erbe der Stadt.</p>
                 `,
-                img: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Osnabrueck_Rathaus_Markt_02.jpg/640px-Osnabrueck_Rathaus_Markt_02.jpg",
-                link: "https://www.osnabrueck.de/rathaus/",
-                source: "Stadtarchiv Osnabrück"
+                // PLATZHALTER BILD
+                img: "https://placehold.co/600x400?text=Bild+Platzhalter",
+                source: "Bildquelle: Name des Urhebers",
+                link: "https://www.museumsquartier-osnabrueck.de/"
             },
             {
-                title: "Schloss Osnabrück",
-                lat: 52.2716,
-                lng: 8.0456,
-                desc: "Heute Universität, früher Residenz. Koloniale Sammlungen spielten hier eine Rolle.",
+                title: "Schlossgarten: Die vier Kontinente",
+                lat: 52.2711, 
+                lng: 8.0450,
+                desc: "Vier Statuen auf der Terrasse repräsentieren die Kontinente – aus einer zutiefst eurozentrischen Sicht.",
                 longText: `
-                    <p>Das barocke Schloss, erbaut in der zweiten Hälfte des 17. Jahrhunderts, diente den Fürstbischöfen als Residenz. Wie an vielen europäischen Höfen, gehörten auch hier exotische Objekte zum guten Ton der Repräsentation.</p>
-                    <h4>Wissenschaft und Kolonialismus</h4>
-                    <p>Später, als das Gebäude schulischen und universitären Zwecken diente, spielten Sammlungen eine wichtige Rolle. Wissenschaftliche Neugier war oft untrennbar mit kolonialer Expansion verknüpft.</p>
-                    <p>Es gilt zu untersuchen, welche Exponate aus kolonialen Kontexten stammten und wie das Wissen über "die Anderen" an diesem Ort konstruiert und gelehrt wurde.</p>
+                    <p>Auf der Terrasse des Osnabrücker Schlosses, mit Blick auf den wunderschönen Schlossgarten, stehen vier barocke Sandsteinfiguren. Sie sind sogenannte "Erdteilallegorien" und stellen Europa, Afrika, Asien und Amerika dar.</p>
+                    <h4>Eine Hierarchie in Stein</h4>
+                    <p>Diese Statuen sind nicht neutral. Sie spiegeln das Weltbild des 18. Jahrhunderts wider, in dem Europa an der Spitze der Zivilisation gesehen wurde:</p>
+                    <blockquote>
+                    "Europa wird oft als Herrscherin mit Krone dargestellt, umgeben von Symbolen der Kunst und Wissenschaft. Die anderen Kontinente werden hingegen oft als 'wild', 'reich an Naturschätzen' aber kulturell unterlegen inszeniert."
+                    </blockquote>
+                    <p>Afrika wird oft halbnackt und mit exotischen Tieren assoziiert, Amerika als 'edler Wilder'. Diese Bilder prägten über Jahrhunderte das europäische Denken und legitimierten koloniale Herrschaft als 'Zivilisierungsmission'.</p>
+                    <h4>Der Standort</h4>
+                    <p>Sie stehen direkt auf der südlichen Terrasse des Schlosses. Ein kritischer Blick auf diese Kunstwerke ist essenziell für das Verständnis lokaler Kolonialgeschichte.</p>
                 `,
-                img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Osnabruecker_Schloss_Hauptgebaeude_2014.jpg/640px-Osnabruecker_Schloss_Hauptgebaeude_2014.jpg",
-                link: "https://www.uni-osnabrueck.de/",
-                source: "Uni Archiv"
-            },
-            {
-                title: "Ledenhof",
-                lat: 52.2740,
-                lng: 8.0460,
-                desc: "Ehemaliger Handelshof. Woher kamen die Waren, die hier gelagert und gehandelt wurden?",
-                longText: `
-                    <p>Der Ledenhof ist eines der ältesten Profangebäude der Stadt und Zeugnis des mittelalterlichen und frühneuzeitlichen Handelsreichtums.</p>
-                    <h4>Osnabrücker Leinen in der Welt</h4>
-                    <p>Osnabrück war bekannt für sein Leinen ("Osnaburgs"), das in die ganze Welt exportiert wurde – bis in die Karibik und nach Amerika. Dort wurde dieser robuste Stoff oft genutzt, um versklavte Menschen zu kleiden.</p>
-                    <p>Der Reichtum vieler Osnabrücker Händlerfamilien basierte somit indirekt auch auf der Plantagenwirtschaft in den Kolonien. Der Ledenhof steht symbolisch für diese globalen Warenströme, die hier in der Region ihren Ausgang nahmen.</p>
-                `,
-                img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Ledenhof_Osnabrueck_01.jpg/640px-Ledenhof_Osnabrueck_01.jpg",
-                link: "#",
-                source: "Museumsquartier"
+                // PLATZHALTER BILD
+                img: "https://placehold.co/600x400?text=Bild+Platzhalter",
+                source: "Bildquelle: Name des Urhebers",
+                link: null 
             }
         ];
 
         // --- 2. Karte initialisieren ---
-        const map = L.map('map', { zoomControl: false }).setView([52.2750, 8.0450], 14);
+        // Zentriere die Karte auf den neuen Startpunkt
+        const map = L.map('map', { zoomControl: false }).setView([52.2742, 8.0435], 15);
 
         const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19, attribution: '© OpenStreetMap'
@@ -262,16 +259,29 @@
             attribution: 'Tiles &copy; Esri'
         });
 
-        L.control.layers({ "Karte": osmLayer, "Satellit": satLayer }, null, { position: 'topright' }).addTo(map);
+        // Layer-Control speichern, um später programmatisch zuzugreifen
+        const layerControl = L.control.layers({ "Karte": osmLayer, "Satellit": satLayer }, null, { position: 'topright' }).addTo(map);
+
+        // --- HELPER FUNKTION: Drone View (Satelliten-Zoom) ---
+        window.activateDroneView = function(lat, lng) {
+            map.removeLayer(osmLayer);
+            map.addLayer(satLayer);
+            map.flyTo([lat, lng], 19, { duration: 2 });
+            document.getElementById('btn-reset-view').classList.remove('hidden');
+        }
+
+        window.resetMapType = function() {
+            map.removeLayer(satLayer);
+            map.addLayer(osmLayer);
+            map.setZoom(16);
+            document.getElementById('btn-reset-view').classList.add('hidden');
+        }
+
 
         // --- 3. Marker & Kacheln generieren ---
         const markers = [];
-        const originalWaypoints = []; // Speichert die ursprüngliche Tour
+        const originalWaypoints = [];
         const tileContainer = document.getElementById('tile-container');
-
-        function getStreetViewLink(lat, lng) {
-            return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
-        }
 
         tourStops.forEach((stop, index) => {
             originalWaypoints.push(L.latLng(stop.lat, stop.lng));
@@ -285,7 +295,6 @@
             });
 
             const marker = L.marker([stop.lat, stop.lng], { icon: numberIcon }).addTo(map);
-            const svLink = getStreetViewLink(stop.lat, stop.lng);
 
             // Popup
             const popupContent = `
@@ -302,9 +311,9 @@
                             <button onclick="openModal(${index})" class="flex-1 bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
                                 <i class="fa-solid fa-book-open mr-1"></i> Lesen
                             </button>
-                            <a href="${svLink}" target="_blank" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border border-blue-100">
-                                <i class="fa-solid fa-street-view"></i>
-                            </a>
+                            <button onclick="activateDroneView(${stop.lat}, ${stop.lng})" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-sm" title="Satelliten-Zoom">
+                                <i class="fa-solid fa-earth-europe"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -315,6 +324,14 @@
             // Sidebar
             const tile = document.createElement('div');
             tile.className = 'info-tile bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 cursor-pointer group';
+            
+            let linksHtml = '';
+            if(stop.link) {
+                 linksHtml += `<a href="${stop.link}" onclick="event.stopPropagation()" target="_blank" class="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-medium py-2 px-3 rounded-lg transition-colors">
+                                    <i class="fa-solid fa-globe mr-1"></i> Webseite
+                                </a>`;
+            }
+
             tile.innerHTML = `
                 <div class="flex flex-col">
                     <div class="h-40 overflow-hidden relative">
@@ -332,12 +349,10 @@
                                 <i class="fa-solid fa-book-open"></i> Geschichte lesen
                             </button>
                             <div class="flex gap-2 mt-1">
-                                <a href="${svLink}" onclick="event.stopPropagation()" target="_blank" class="flex-1 text-center bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium py-2 px-3 rounded-lg transition-colors border border-blue-100">
-                                    <i class="fa-solid fa-street-view mr-1"></i> Street View
-                                </a>
-                                <a href="${stop.link}" onclick="event.stopPropagation()" target="_blank" class="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-medium py-2 px-3 rounded-lg transition-colors">
-                                    <i class="fa-solid fa-globe mr-1"></i> Webseite
-                                </a>
+                                <button onclick="event.stopPropagation(); activateDroneView(${stop.lat}, ${stop.lng})" class="flex-1 text-center bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs font-medium py-2 px-3 rounded-lg transition-colors border border-blue-200">
+                                    <i class="fa-solid fa-earth-europe mr-1"></i> Satelliten-Zoom
+                                </button>
+                                ${linksHtml}
                             </div>
                         </div>
                     </div>
@@ -351,45 +366,39 @@
         });
 
         // --- 4. Routing Initialisierung ---
-        // Wir speichern das Control, um es später zu updaten
+        // Wir übergeben ALLE Wegpunkte, damit die Linie gezeichnet wird
         let routingControl = L.Routing.control({
             waypoints: originalWaypoints,
             routeWhileDragging: false,
             draggableWaypoints: false,
             addWaypoints: false,
             fitSelectedRoutes: false,
-            show: false, // Panel versteckt, wir bauen unser eigenes
+            show: false,
             createMarker: function() { return null; },
             lineOptions: { styles: [{color: '#ea580c', opacity: 0.8, weight: 6}] }
         }).addTo(map);
 
-        // Event Listener für Routen-Infos (Distanz/Zeit)
         routingControl.on('routesfound', function(e) {
             const routes = e.routes;
             const summary = routes[0].summary;
-            // Umrechnen in km und minuten
             const distKm = (summary.totalDistance / 1000).toFixed(1);
             const timeMin = Math.round(summary.totalTime / 60);
-            
-            // UI Update
             document.getElementById('route-stats').classList.remove('hidden');
             document.getElementById('route-dist').innerText = distKm + " km gesamt";
             document.getElementById('route-time').innerText = "~" + timeMin + " min";
         });
 
-        // --- 5. NEUE ROUTEN-FUNKTIONEN ---
-
+        // --- 5. ROUTEN FUNKTIONEN ---
         window.calculateRouteToStart = function() {
             const btn = document.getElementById('btn-calc-route');
             const originalText = btn.innerHTML;
-            
-            // Ladezustand
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Orte Standort...';
             btn.disabled = true;
 
             if (!navigator.geolocation) {
                 alert("Geolocation wird nicht unterstützt.");
-                resetBtn();
+                btn.innerHTML = originalText;
+                btn.disabled = false;
                 return;
             }
 
@@ -397,16 +406,14 @@
                 const userLat = position.coords.latitude;
                 const userLng = position.coords.longitude;
                 
-                // Neue Wegpunkte: User -> Station 1 -> Station 2 ...
+                // Route: User -> Station 1 -> Station 2 ...
                 const newWaypoints = [
                     L.latLng(userLat, userLng),
                     ...originalWaypoints
                 ];
                 
-                // Routing aktualisieren
                 routingControl.setWaypoints(newWaypoints);
                 
-                // User Marker setzen
                 if (userMarker) map.removeLayer(userMarker);
                 const gpsIcon = L.divIcon({
                     className: 'gps-wrapper',
@@ -415,15 +422,10 @@
                     iconAnchor: [10, 10]
                 });
                 userMarker = L.marker([userLat, userLng], {icon: gpsIcon}).addTo(map);
-                
-                // Kamera auf User zentrieren
                 map.flyTo([userLat, userLng], 15);
 
-                // UI Status ändern
                 btn.classList.add('hidden');
                 document.getElementById('btn-reset-route').classList.remove('hidden');
-                
-                // Button Reset (falls er später wieder eingeblendet wird)
                 btn.innerHTML = originalText;
                 btn.disabled = false;
 
@@ -435,18 +437,13 @@
         }
 
         window.resetRoute = function() {
-            // Zurück zur ursprünglichen Tour (Station 1 -> Ende)
+            // Zurück zur Standard-Route
             routingControl.setWaypoints(originalWaypoints);
-            
-            // Buttons toggeln
             document.getElementById('btn-calc-route').classList.remove('hidden');
             document.getElementById('btn-reset-route').classList.add('hidden');
             document.getElementById('route-stats').classList.add('hidden');
-            
-            // Kamera zurück zum Start
-            map.flyTo(originalWaypoints[0], 15);
+            map.flyTo(originalWaypoints[0], 16);
         }
-
 
         // --- Standard Logic ---
         const modal = document.getElementById('info-modal');
@@ -460,7 +457,7 @@
             modalTitle.innerText = data.title;
             modalText.innerHTML = data.longText;
             modalImg.src = data.img;
-            modalSource.innerText = "Quelle: " + (data.source || "Keine Angabe");
+            modalSource.innerText = data.source || "Keine Angabe";
             modal.classList.remove('hidden');
         }
 
