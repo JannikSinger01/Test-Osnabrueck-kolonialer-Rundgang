@@ -3,251 +3,350 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe Map Navigator</title>
+    <title>Osnabrück: Koloniales Erbe</title>
     
-    <!-- Tailwind CSS für schnelles Styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
      crossorigin=""/>
-     
+
     <!-- Leaflet Routing Machine CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
-    <!-- Font Awesome für Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body, html {
-            height: 100%;
-            margin: 0;
+        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        
+        /* Map Container nimmt den verfügbaren Platz ein */
+        #map-container { position: relative; height: 100%; width: 100%; }
+        #map { height: 100%; width: 100%; z-index: 1; }
+        
+        /* Sidebar Styling */
+        #sidebar { 
+            height: 100%; 
+            overflow-y: auto; 
+            scrollbar-width: thin; /* Firefox */
+        }
+        
+        /* Stylische Popups */
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            padding: 0;
             overflow: hidden;
         }
-        #map {
-            height: 100%;
-            width: 100%;
-            z-index: 1;
-        }
+        .leaflet-popup-content { margin: 0; width: 280px !important; }
+        .leaflet-popup-tip { background: white; }
         
-        /* Custom Styling für die Routing-Box, damit sie modern aussieht */
-        .leaflet-routing-container {
-            background-color: rgba(255, 255, 255, 0.95) !important;
-            border-radius: 12px !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-            padding: 15px !important;
-            border: none !important;
-            font-family: system-ui, -apple-system, sans-serif !important;
+        /* Marker Styling */
+        .number-icon {
+            background-color: #ea580c; /* Orange-600 */
+            color: white;
+            border: 3px solid white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
         }
-        
-        .leaflet-bar a {
-            background-color: white;
-            color: #3b82f6; /* Tailwind Blue-500 */
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .leaflet-control-layers {
-            border-radius: 8px !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-            border: none !important;
-            padding: 6px !important;
-        }
+        .number-icon:hover { transform: scale(1.1); background-color: #c2410c; }
 
-        /* Pulsierender Effekt für den eigenen Standort */
+        /* Standort Puls */
         .gps-marker {
             background-color: #3b82f6;
             border: 2px solid white;
             border-radius: 50%;
             width: 16px;
             height: 16px;
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
             animation: pulse-blue 2s infinite;
         }
-
         @keyframes pulse-blue {
-            0% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
-            }
-            70% {
-                transform: scale(1);
-                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-            }
-            100% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-            }
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        /* Routing Text verstecken */
+        .leaflet-routing-container { display: none !important; }
+
+        /* Kachel Hover Effekt */
+        .info-tile:hover {
+            border-color: #ea580c;
+            transform: translateY(-2px);
+        }
+
+        /* Resizer Handle Styling */
+        #resizer {
+            transition: background-color 0.2s;
+        }
+        #resizer:hover, #resizer.resizing {
+            background-color: #ea580c; /* Orange beim Hovern/Ziehen */
         }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 flex flex-col md:flex-row h-screen w-screen overflow-hidden" id="main-container">
 
-    <!-- UI Overlay (Titel & Buttons) -->
-    <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] bg-white/90 backdrop-blur-sm px-6 py-2 rounded-full shadow-lg border border-gray-200 flex items-center gap-3">
-        <i class="fa-solid fa-map-location-dot text-blue-500 text-xl"></i>
-        <h1 class="text-gray-800 font-bold text-lg">VibeNav</h1>
+    <!-- HAUPTBEREICH: KARTE -->
+    <div class="relative flex-grow h-1/2 md:h-full w-full md:w-auto order-1">
+        
+        <!-- Header Overlay -->
+        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-[500] w-11/12 max-w-md pointer-events-none">
+            <div class="bg-white/95 backdrop-blur-md px-6 py-3 rounded-2xl shadow-xl border border-gray-200 flex items-center justify-between pointer-events-auto">
+                <div class="flex items-center gap-3">
+                    <div class="bg-orange-100 p-2 rounded-full text-orange-600">
+                        <i class="fa-solid fa-shoe-prints"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-gray-900 font-bold text-sm uppercase tracking-wider">Osnabrück</h1>
+                        <p class="text-xs text-gray-500 font-medium">Spuren des kolonialen Erbes</p>
+                    </div>
+                </div>
+                <button onclick="startTour()" class="bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-orange-700 transition">
+                    Start
+                </button>
+            </div>
+        </div>
+
+        <!-- Controls Bottom Right -->
+        <div class="absolute bottom-8 right-4 z-[500] flex flex-col gap-3">
+            <button onclick="locateUser()" class="bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110">
+                <i class="fa-solid fa-location-arrow text-lg"></i>
+            </button>
+        </div>
+
+        <div id="map"></div>
     </div>
 
-    <div class="absolute bottom-8 right-4 z-[1000] flex flex-col gap-3">
-        <button onclick="locateUser()" class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-all hover:scale-110 group tooltip" title="Mein Standort">
-            <i class="fa-solid fa-location-crosshairs text-xl"></i>
-        </button>
-        <button onclick="clearRoute()" class="bg-red-500 hover:bg-red-600 text-white p-4 rounded-full shadow-lg transition-all hover:scale-110" title="Route löschen">
-            <i class="fa-solid fa-trash text-xl"></i>
-        </button>
-    </div>
+    <!-- RESIZER HANDLE (Nur Desktop) -->
+    <div id="resizer" class="hidden md:block w-1.5 h-full bg-gray-300 cursor-col-resize z-30 flex-shrink-0 order-2 hover:w-2 transition-all"></div>
 
-    <!-- Map Container -->
-    <div id="map"></div>
+    <!-- SEITENLEISTE: INFO KACHELN -->
+    <!-- Initialbreite verringert auf 320px (vorher 400px) -->
+    <aside id="sidebar" class="w-full md:w-[320px] bg-white border-l border-gray-200 z-20 flex-shrink-0 order-3 shadow-xl flex flex-col" style="min-width: 250px; max-width: 800px;">
+        <div class="p-6 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+            <h2 class="text-xl font-bold text-gray-800">Stationen</h2>
+            <p class="text-sm text-gray-500 mt-1">Ein Rundgang durch die Geschichte</p>
+        </div>
+        
+        <div id="tile-container" class="p-4 space-y-4 pb-20">
+            <!-- Dynamischer Content -->
+        </div>
+    </aside>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
-     
+
     <!-- Leaflet Routing Machine JS -->
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
     <script>
-        // --- 1. Karte initialisieren ---
-        // Wir starten in Berlin als Default
-        const map = L.map('map').setView([52.5200, 13.4050], 13);
+        // --- 1. DATEN: Deine Stationen ---
+        const tourStops = [
+            {
+                title: "Rathaus des Westfälischen Friedens",
+                lat: 52.2768, 
+                lng: 8.0425,
+                desc: "Ein Ort historischer Entscheidungen. Der Westfälische Frieden beendete den Dreißigjährigen Krieg, hatte aber auch globale Auswirkungen. Hier wurden diplomatische Beziehungen gepflegt, die später den Kolonialismus beeinflussten.",
+                img: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Osnabrueck_Rathaus_Markt_02.jpg/640px-Osnabrueck_Rathaus_Markt_02.jpg",
+                link: "https://www.osnabrueck.de/rathaus/",
+                source: "Stadtarchiv Osnabrück"
+            },
+            {
+                title: "Schloss Osnabrück",
+                lat: 52.2716,
+                lng: 8.0456,
+                desc: "Heute Universität, früher Residenz. In den Sammlungen des Schlosses befanden sich oft Objekte aus Übersee, die durch koloniale Netzwerke hierher gelangten.",
+                img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Osnabruecker_Schloss_Hauptgebaeude_2014.jpg/640px-Osnabruecker_Schloss_Hauptgebaeude_2014.jpg",
+                link: "https://www.uni-osnabrueck.de/",
+                source: "Uni Archiv"
+            },
+            {
+                title: "Ledenhof",
+                lat: 52.2740,
+                lng: 8.0460,
+                desc: "Ehemaliger Handelshof einer Patrizierfamilie. Der Ledenhof steht exemplarisch für den Fernhandel, der Osnabrück mit der Welt verband, inklusive kolonialer Warenströme.",
+                img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Ledenhof_Osnabrueck_01.jpg/640px-Ledenhof_Osnabrueck_01.jpg",
+                link: "#",
+                source: "Museumsquartier"
+            }
+        ];
 
-        // --- 2. Layer definieren (Kartenarten) ---
-        
-        // A. Standard Straßenkarte (OpenStreetMap)
+        // --- 2. Karte initialisieren ---
+        const map = L.map('map', { zoomControl: false }).setView([52.2750, 8.0450], 14);
+
         const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap'
-        }).addTo(map); // Standardmäßig hinzufügen
+            maxZoom: 19, attribution: '© OpenStreetMap'
+        }).addTo(map);
 
-        // B. Satellitenkarte (Esri World Imagery)
-        // Dieser Provider ist oft frei zugänglich für Standardanwendungen
-        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri'
         });
 
-        // Layer-Kontrolle hinzufügen (oben rechts)
-        const baseMaps = {
-            "Straßenkarte": osmLayer,
-            "Satellit": satelliteLayer
-        };
-        L.control.layers(baseMaps).addTo(map);
+        L.control.layers({ "Karte": osmLayer, "Satellit": satLayer }, null, { position: 'topright' }).addTo(map);
 
-        // --- 3. Routing Setup ---
-        let routingControl = null;
+        // --- 3. Marker & Kacheln generieren ---
+        const markers = [];
+        const waypoints = [];
+        const tileContainer = document.getElementById('tile-container');
 
-        function initRouting(startLat, startLng, destLat, destLng) {
-            // Wenn schon eine Route da ist, entferne sie zuerst
-            if (routingControl) {
-                map.removeControl(routingControl);
-            }
+        tourStops.forEach((stop, index) => {
+            waypoints.push(L.latLng(stop.lat, stop.lng));
 
-            routingControl = L.Routing.control({
-                waypoints: [
-                    L.latLng(startLat, startLng),
-                    L.latLng(destLat, destLng)
-                ],
-                routeWhileDragging: true,
-                language: 'de', // Deutsche Anweisungen
-                showAlternatives: true,
-                lineOptions: {
-                    styles: [{color: '#3b82f6', opacity: 0.7, weight: 6}]
-                },
-                createMarker: function(i, wp, nWps) {
-                    // Custom Marker Icons (Start = Grün, Ziel = Rot)
-                    const color = i === 0 ? 'green' : (i === nWps - 1 ? 'red' : 'blue');
-                    return L.marker(wp.latLng, {
-                        icon: L.divIcon({
-                            className: 'custom-pin',
-                            html: `<i class="fa-solid fa-location-dot" style="color: ${color}; font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); transform: translate(-50%, -100%);"></i>`,
-                            iconSize: [32, 32],
-                            iconAnchor: [16, 32]
-                        })
-                    });
-                }
-            }).addTo(map);
-        }
+            const numberIcon = L.divIcon({
+                className: 'bg-transparent',
+                html: `<div class="number-icon">${index + 1}</div>`,
+                iconSize: [34, 34],
+                iconAnchor: [17, 17],
+                popupAnchor: [0, -20]
+            });
 
-        // Demo-Route initialisieren (Berlin Hbf -> Brandenburger Tor)
-        initRouting(52.5251, 13.3694, 52.5163, 13.3777);
-
-        // --- 4. Interaktion: Klick auf Karte für Wegpunkte ---
-        // Einfache Logik: Klick setzt neues Ziel, aktueller Center oder GPS ist Start
-        map.on('click', function(e) {
-            const dest = e.latlng;
+            const marker = L.marker([stop.lat, stop.lng], { icon: numberIcon }).addTo(map);
             
-            // Wir nehmen als Startpunkt den ersten Wegpunkt der aktuellen Route 
-            // oder den Center der Karte, wenn noch keine Route da ist.
-            let start = map.getCenter();
-            if (routingControl && routingControl.getWaypoints().length > 0) {
-                start = routingControl.getWaypoints()[0].latLng;
-            }
+            const popupContent = `
+                <div class="flex flex-col">
+                    <div class="h-32 w-full bg-gray-200 overflow-hidden relative">
+                        <img src="${stop.img}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400?text=Kein+Bild'">
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
+                            <span class="text-white text-xs font-bold uppercase tracking-widest">Station ${index + 1}</span>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-white">
+                        <h3 class="font-bold text-gray-800 text-lg mb-1 leading-tight">${stop.title}</h3>
+                    </div>
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent);
+            markers.push(marker);
 
-            initRouting(start.lat, start.lng, dest.lat, dest.lng);
+            const tile = document.createElement('div');
+            tile.className = 'info-tile bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 cursor-pointer group';
+            tile.innerHTML = `
+                <div class="flex flex-col">
+                    <div class="h-40 overflow-hidden relative">
+                         <img src="${stop.img}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.src='https://placehold.co/600x400?text=Kein+Bild'">
+                         <div class="absolute top-3 left-3 bg-orange-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shadow-md text-sm border-2 border-white">
+                            ${index + 1}
+                         </div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="font-bold text-gray-900 text-lg mb-2">${stop.title}</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">${stop.desc}</p>
+                        <div class="flex items-center gap-2 mt-2 pt-3 border-t border-gray-100">
+                            <a href="${stop.link}" target="_blank" class="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2 px-3 rounded-lg transition-colors">
+                                <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Mehr Infos
+                            </a>
+                            ${stop.source ? `
+                            <span class="text-xs text-gray-400 bg-gray-50 py-2 px-3 rounded-lg border border-gray-100" title="Quelle">
+                                <i class="fa-solid fa-book mr-1"></i> ${stop.source}
+                            </span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            tile.addEventListener('click', () => {
+                map.flyTo([stop.lat, stop.lng], 16, { duration: 1.5 });
+                setTimeout(() => { marker.openPopup(); }, 1500);
+            });
+            tileContainer.appendChild(tile);
         });
 
-        // --- 5. GPS / Geolocation ---
-        let userMarker = null;
+        L.Routing.control({
+            waypoints: waypoints,
+            routeWhileDragging: false,
+            draggableWaypoints: false,
+            addWaypoints: false,
+            fitSelectedRoutes: false,
+            show: false,
+            createMarker: function() { return null; },
+            lineOptions: { styles: [{color: '#ea580c', opacity: 0.8, weight: 6}] }
+        }).addTo(map);
 
-        function locateUser() {
-            if (!navigator.geolocation) {
-                alert("Geolocation wird von diesem Browser nicht unterstützt.");
-                return;
+        // --- RESIZER LOGIC ---
+        const resizer = document.getElementById('resizer');
+        const sidebar = document.getElementById('sidebar');
+
+        // Initialisierung Drag
+        resizer.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            resizer.classList.add('resizing');
+            
+            // Mousemove Event hinzufügen
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            
+            // Iframe/Selection Protection (damit Maus nicht "hängen" bleibt)
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        });
+
+        function handleMouseMove(e) {
+            // Berechnung: Neue Breite = Gesamtbreite - Mausposition
+            // (weil Sidebar rechts ist)
+            const newWidth = window.innerWidth - e.clientX;
+            
+            // Limits beachten (Min 250px, Max 800px)
+            if (newWidth > 250 && newWidth < 800) {
+                sidebar.style.width = newWidth + 'px';
+                
+                // WICHTIG: Map muss Größe neu berechnen, wenn Container sich ändert
+                map.invalidateSize();
             }
-
-            // Lade-Feedback (Icon dreht sich)
-            const icon = document.querySelector('.fa-location-crosshairs');
-            icon.classList.add('fa-spin');
-
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
-
-                    // Marker entfernen falls vorhanden
-                    if (userMarker) {
-                        map.removeLayer(userMarker);
-                    }
-
-                    // Custom GPS Marker (CSS pulse)
-                    const gpsIcon = L.divIcon({
-                        className: 'gps-marker-wrapper',
-                        html: '<div class="gps-marker"></div>',
-                        iconSize: [20, 20],
-                        iconAnchor: [10, 10]
-                    });
-
-                    userMarker = L.marker([lat, lng], {icon: gpsIcon}).addTo(map);
-                    
-                    // Karte zentrieren und zoomen
-                    map.flyTo([lat, lng], 16);
-                    
-                    // Routing vom aktuellen Standort starten (optional)
-                    // Wenn es schon ein Ziel gibt, aktualisiere den Startpunkt
-                    if (routingControl) {
-                        const waypoints = routingControl.getWaypoints();
-                        const dest = waypoints[waypoints.length - 1].latLng;
-                        initRouting(lat, lng, dest.lat, dest.lng);
-                    }
-
-                    // Lade-Animation stoppen
-                    icon.classList.remove('fa-spin');
-                },
-                (error) => {
-                    alert("Standort konnte nicht ermittelt werden: " + error.message);
-                    icon.classList.remove('fa-spin');
-                }
-            );
         }
 
-        function clearRoute() {
-            if (routingControl) {
-                map.removeControl(routingControl);
-                routingControl = null;
+        function handleMouseUp() {
+            resizer.classList.remove('resizing');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            
+            // Listener entfernen
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        }
+
+
+        // --- Helper Funktionen ---
+        function startTour() {
+            if (markers.length > 0) {
+                map.flyTo(waypoints[0], 16, { duration: 1.5 });
+                setTimeout(() => {
+                    markers[0].openPopup();
+                    document.getElementById('sidebar').scrollTop = 0;
+                }, 1600);
             }
+        }
+
+        let userMarker = null;
+        function locateUser() {
+            if (!navigator.geolocation) { alert("Geolocation nicht verfügbar"); return; }
+            const btnIcon = document.querySelector('.fa-location-arrow');
+            btnIcon.classList.add('fa-spin');
+
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                if (userMarker) map.removeLayer(userMarker);
+
+                const gpsIcon = L.divIcon({
+                    className: 'gps-wrapper',
+                    html: '<div class="gps-marker"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
+                userMarker = L.marker([lat, lng], {icon: gpsIcon}).addTo(map);
+                map.flyTo([lat, lng], 16);
+                btnIcon.classList.remove('fa-spin');
+            }, (err) => {
+                alert("Fehler: " + err.message);
+                btnIcon.classList.remove('fa-spin');
+            });
         }
     </script>
 </body>
