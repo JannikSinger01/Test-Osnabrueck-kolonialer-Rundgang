@@ -20,7 +20,7 @@
     <style>
         body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
         
-        /* Map Container nimmt den verfügbaren Platz ein */
+        /* Map Container */
         #map-container { position: relative; height: 100%; width: 100%; }
         #map { height: 100%; width: 100%; z-index: 1; }
         
@@ -28,7 +28,7 @@
         #sidebar { 
             height: 100%; 
             overflow-y: auto; 
-            scrollbar-width: thin; /* Firefox */
+            scrollbar-width: thin; 
         }
         
         /* Stylische Popups */
@@ -80,20 +80,52 @@
         }
 
         /* Resizer Handle Styling */
-        #resizer {
-            transition: background-color 0.2s;
-        }
-        #resizer:hover, #resizer.resizing {
-            background-color: #ea580c; /* Orange beim Hovern/Ziehen */
-        }
+        #resizer { transition: background-color 0.2s; }
+        #resizer:hover, #resizer.resizing { background-color: #ea580c; }
+
+        /* Custom Scrollbar für Modal */
+        .modal-content::-webkit-scrollbar { width: 8px; }
+        .modal-content::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .modal-content::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        .modal-content::-webkit-scrollbar-thumb:hover { background: #aaa; }
+        
+        /* Typography für langen Text */
+        .prose p { margin-bottom: 1rem; line-height: 1.7; color: #374151; }
+        .prose h4 { margin-top: 1.5rem; margin-bottom: 0.5rem; font-weight: bold; color: #1f2937; }
     </style>
 </head>
 <body class="bg-gray-100 flex flex-col md:flex-row h-screen w-screen overflow-hidden" id="main-container">
 
+    <!-- MODAL (Overlay für langen Text) -->
+    <div id="info-modal" class="fixed inset-0 z-[2000] hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
+        <div class="absolute inset-4 md:inset-auto md:top-10 md:bottom-10 md:left-1/2 md:transform md:-translate-x-1/2 md:w-[700px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-[fadeIn_0.3s_ease-out]">
+            <div class="h-48 md:h-64 relative flex-shrink-0">
+                <img id="modal-img" src="" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                <button onclick="closeModal()" class="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 w-10 h-10 backdrop-blur-md transition-colors flex items-center justify-center">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+                <div class="absolute bottom-4 left-6 right-6">
+                    <span class="bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded mb-2 inline-block uppercase tracking-wider">Hintergrundwissen</span>
+                    <h2 id="modal-title" class="text-2xl md:text-3xl font-bold text-white leading-tight shadow-sm">Titel Platzhalter</h2>
+                </div>
+            </div>
+            <div class="flex-grow overflow-y-auto p-6 md:p-10 modal-content bg-white">
+                <div id="modal-text" class="prose max-w-none text-lg"></div>
+                <div class="mt-8 pt-6 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
+                    <span id="modal-source">Quelle: Stadtarchiv</span>
+                    <button onclick="closeModal()" class="text-orange-600 font-semibold hover:text-orange-700">Schließen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <!-- HAUPTBEREICH: KARTE -->
     <div class="relative flex-grow h-1/2 md:h-full w-full md:w-auto order-1">
         
-        <!-- Header Overlay -->
+        <!-- Header Overlay (Titel) -->
         <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-[500] w-11/12 max-w-md pointer-events-none">
             <div class="bg-white/95 backdrop-blur-md px-6 py-3 rounded-2xl shadow-xl border border-gray-200 flex items-center justify-between pointer-events-auto">
                 <div class="flex items-center gap-3">
@@ -105,15 +137,38 @@
                         <p class="text-xs text-gray-500 font-medium">Spuren des kolonialen Erbes</p>
                     </div>
                 </div>
-                <button onclick="startTour()" class="bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-orange-700 transition">
-                    Start
-                </button>
+            </div>
+        </div>
+
+        <!-- ROUTEN PLANER PANEL (NEU - LINKS OBEN) -->
+        <div class="absolute top-24 left-4 z-[500] max-w-[260px] md:max-w-[300px]">
+            <div class="bg-white/95 backdrop-blur-md p-4 rounded-xl shadow-lg border border-gray-200">
+                <h3 class="text-gray-800 font-bold text-sm mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-route text-blue-500"></i> Anreise & Route
+                </h3>
+                <p class="text-xs text-gray-500 mb-3 leading-relaxed">Berechne den Weg von deinem Standort zum Startpunkt der Tour.</p>
+                
+                <div id="route-stats" class="hidden mb-3 bg-blue-50 p-2 rounded-lg border border-blue-100">
+                    <div class="flex justify-between items-center text-xs text-blue-800 font-medium">
+                        <span id="route-dist">-- km</span>
+                        <span id="route-time">-- min</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <button onclick="calculateRouteToStart()" id="btn-calc-route" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-location-crosshairs"></i> Route von hier starten
+                    </button>
+                    <button onclick="resetRoute()" id="btn-reset-route" class="hidden w-full bg-gray-100 hover:bg-gray-200 text-gray-600 py-2 px-3 rounded-lg text-xs font-semibold transition-all">
+                        Tour zurücksetzen
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Controls Bottom Right -->
         <div class="absolute bottom-8 right-4 z-[500] flex flex-col gap-3">
-            <button onclick="locateUser()" class="bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110">
+            <button onclick="locateUser()" class="bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110" title="Mein Standort">
                 <i class="fa-solid fa-location-arrow text-lg"></i>
             </button>
         </div>
@@ -121,11 +176,10 @@
         <div id="map"></div>
     </div>
 
-    <!-- RESIZER HANDLE (Nur Desktop) -->
+    <!-- RESIZER HANDLE -->
     <div id="resizer" class="hidden md:block w-1.5 h-full bg-gray-300 cursor-col-resize z-30 flex-shrink-0 order-2 hover:w-2 transition-all"></div>
 
-    <!-- SEITENLEISTE: INFO KACHELN -->
-    <!-- Initialbreite verringert auf 320px (vorher 400px) -->
+    <!-- SEITENLEISTE -->
     <aside id="sidebar" class="w-full md:w-[320px] bg-white border-l border-gray-200 z-20 flex-shrink-0 order-3 shadow-xl flex flex-col" style="min-width: 250px; max-width: 800px;">
         <div class="p-6 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
             <h2 class="text-xl font-bold text-gray-800">Stationen</h2>
@@ -146,13 +200,21 @@
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
     <script>
-        // --- 1. DATEN: Deine Stationen ---
+        // --- 1. DATEN ---
         const tourStops = [
             {
                 title: "Rathaus des Westfälischen Friedens",
                 lat: 52.2768, 
                 lng: 8.0425,
-                desc: "Ein Ort historischer Entscheidungen. Der Westfälische Frieden beendete den Dreißigjährigen Krieg, hatte aber auch globale Auswirkungen. Hier wurden diplomatische Beziehungen gepflegt, die später den Kolonialismus beeinflussten.",
+                desc: "Ein Ort historischer Entscheidungen. Der Westfälische Frieden beendete den Dreißigjährigen Krieg.",
+                longText: `
+                    <p>Das Osnabrücker Rathaus ist vor allem als Stätte des Westfälischen Friedens bekannt. Doch der Friedensschluss von 1648 hatte nicht nur europäische, sondern globale Dimensionen.</p>
+                    <h4>Diplomatie und Welthandel</h4>
+                    <p>Mit der Neuordnung Europas wurden auch die Weichen für die koloniale Expansion gestellt. Die Niederlande, deren Unabhängigkeit hier bestätigt wurde, stiegen im Anschluss zu einer der führenden Kolonialmächte auf.</p>
+                    <p>Im Friedenssaal hängen die Porträts der Gesandten. Viele ihrer Familien waren direkt oder indirekt in den frühen Fernhandel involviert, der oft auf Ausbeutung basierte.</p>
+                    <h4>Spuren im Heute</h4>
+                    <p>Heute dient das Rathaus als Mahnmal für den Frieden, lädt aber auch dazu ein, die eurozentrische Sicht auf diesen Frieden kritisch zu hinterfragen.</p>
+                `,
                 img: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Osnabrueck_Rathaus_Markt_02.jpg/640px-Osnabrueck_Rathaus_Markt_02.jpg",
                 link: "https://www.osnabrueck.de/rathaus/",
                 source: "Stadtarchiv Osnabrück"
@@ -161,7 +223,13 @@
                 title: "Schloss Osnabrück",
                 lat: 52.2716,
                 lng: 8.0456,
-                desc: "Heute Universität, früher Residenz. In den Sammlungen des Schlosses befanden sich oft Objekte aus Übersee, die durch koloniale Netzwerke hierher gelangten.",
+                desc: "Heute Universität, früher Residenz. Koloniale Sammlungen spielten hier eine Rolle.",
+                longText: `
+                    <p>Das barocke Schloss, erbaut in der zweiten Hälfte des 17. Jahrhunderts, diente den Fürstbischöfen als Residenz. Wie an vielen europäischen Höfen, gehörten auch hier exotische Objekte zum guten Ton der Repräsentation.</p>
+                    <h4>Wissenschaft und Kolonialismus</h4>
+                    <p>Später, als das Gebäude schulischen und universitären Zwecken diente, spielten Sammlungen eine wichtige Rolle. Wissenschaftliche Neugier war oft untrennbar mit kolonialer Expansion verknüpft.</p>
+                    <p>Es gilt zu untersuchen, welche Exponate aus kolonialen Kontexten stammten und wie das Wissen über "die Anderen" an diesem Ort konstruiert und gelehrt wurde.</p>
+                `,
                 img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Osnabruecker_Schloss_Hauptgebaeude_2014.jpg/640px-Osnabruecker_Schloss_Hauptgebaeude_2014.jpg",
                 link: "https://www.uni-osnabrueck.de/",
                 source: "Uni Archiv"
@@ -170,7 +238,13 @@
                 title: "Ledenhof",
                 lat: 52.2740,
                 lng: 8.0460,
-                desc: "Ehemaliger Handelshof einer Patrizierfamilie. Der Ledenhof steht exemplarisch für den Fernhandel, der Osnabrück mit der Welt verband, inklusive kolonialer Warenströme.",
+                desc: "Ehemaliger Handelshof. Woher kamen die Waren, die hier gelagert und gehandelt wurden?",
+                longText: `
+                    <p>Der Ledenhof ist eines der ältesten Profangebäude der Stadt und Zeugnis des mittelalterlichen und frühneuzeitlichen Handelsreichtums.</p>
+                    <h4>Osnabrücker Leinen in der Welt</h4>
+                    <p>Osnabrück war bekannt für sein Leinen ("Osnaburgs"), das in die ganze Welt exportiert wurde – bis in die Karibik und nach Amerika. Dort wurde dieser robuste Stoff oft genutzt, um versklavte Menschen zu kleiden.</p>
+                    <p>Der Reichtum vieler Osnabrücker Händlerfamilien basierte somit indirekt auch auf der Plantagenwirtschaft in den Kolonien. Der Ledenhof steht symbolisch für diese globalen Warenströme, die hier in der Region ihren Ausgang nahmen.</p>
+                `,
                 img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Ledenhof_Osnabrueck_01.jpg/640px-Ledenhof_Osnabrueck_01.jpg",
                 link: "#",
                 source: "Museumsquartier"
@@ -192,11 +266,15 @@
 
         // --- 3. Marker & Kacheln generieren ---
         const markers = [];
-        const waypoints = [];
+        const originalWaypoints = []; // Speichert die ursprüngliche Tour
         const tileContainer = document.getElementById('tile-container');
 
+        function getStreetViewLink(lat, lng) {
+            return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+        }
+
         tourStops.forEach((stop, index) => {
-            waypoints.push(L.latLng(stop.lat, stop.lng));
+            originalWaypoints.push(L.latLng(stop.lat, stop.lng));
 
             const numberIcon = L.divIcon({
                 className: 'bg-transparent',
@@ -207,7 +285,9 @@
             });
 
             const marker = L.marker([stop.lat, stop.lng], { icon: numberIcon }).addTo(map);
-            
+            const svLink = getStreetViewLink(stop.lat, stop.lng);
+
+            // Popup
             const popupContent = `
                 <div class="flex flex-col">
                     <div class="h-32 w-full bg-gray-200 overflow-hidden relative">
@@ -217,14 +297,22 @@
                         </div>
                     </div>
                     <div class="p-4 bg-white">
-                        <h3 class="font-bold text-gray-800 text-lg mb-1 leading-tight">${stop.title}</h3>
+                        <h3 class="font-bold text-gray-800 text-lg mb-2 leading-tight">${stop.title}</h3>
+                        <div class="flex gap-2">
+                            <button onclick="openModal(${index})" class="flex-1 bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
+                                <i class="fa-solid fa-book-open mr-1"></i> Lesen
+                            </button>
+                            <a href="${svLink}" target="_blank" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border border-blue-100">
+                                <i class="fa-solid fa-street-view"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             `;
-            
             marker.bindPopup(popupContent);
             markers.push(marker);
 
+            // Sidebar
             const tile = document.createElement('div');
             tile.className = 'info-tile bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 cursor-pointer group';
             tile.innerHTML = `
@@ -238,19 +326,23 @@
                     <div class="p-5">
                         <h3 class="font-bold text-gray-900 text-lg mb-2">${stop.title}</h3>
                         <p class="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">${stop.desc}</p>
-                        <div class="flex items-center gap-2 mt-2 pt-3 border-t border-gray-100">
-                            <a href="${stop.link}" target="_blank" class="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2 px-3 rounded-lg transition-colors">
-                                <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Mehr Infos
-                            </a>
-                            ${stop.source ? `
-                            <span class="text-xs text-gray-400 bg-gray-50 py-2 px-3 rounded-lg border border-gray-100" title="Quelle">
-                                <i class="fa-solid fa-book mr-1"></i> ${stop.source}
-                            </span>` : ''}
+                        
+                        <div class="flex flex-col gap-2 pt-2 border-t border-gray-100">
+                            <button onclick="event.stopPropagation(); openModal(${index})" class="w-full bg-gray-900 hover:bg-black text-white py-2.5 px-4 rounded-lg text-sm font-semibold transition-all shadow-md flex items-center justify-center gap-2 group-hover:shadow-lg">
+                                <i class="fa-solid fa-book-open"></i> Geschichte lesen
+                            </button>
+                            <div class="flex gap-2 mt-1">
+                                <a href="${svLink}" onclick="event.stopPropagation()" target="_blank" class="flex-1 text-center bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium py-2 px-3 rounded-lg transition-colors border border-blue-100">
+                                    <i class="fa-solid fa-street-view mr-1"></i> Street View
+                                </a>
+                                <a href="${stop.link}" onclick="event.stopPropagation()" target="_blank" class="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-medium py-2 px-3 rounded-lg transition-colors">
+                                    <i class="fa-solid fa-globe mr-1"></i> Webseite
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
-
             tile.addEventListener('click', () => {
                 map.flyTo([stop.lat, stop.lng], 16, { duration: 1.5 });
                 setTimeout(() => { marker.openPopup(); }, 1500);
@@ -258,45 +350,140 @@
             tileContainer.appendChild(tile);
         });
 
-        L.Routing.control({
-            waypoints: waypoints,
+        // --- 4. Routing Initialisierung ---
+        // Wir speichern das Control, um es später zu updaten
+        let routingControl = L.Routing.control({
+            waypoints: originalWaypoints,
             routeWhileDragging: false,
             draggableWaypoints: false,
             addWaypoints: false,
             fitSelectedRoutes: false,
-            show: false,
+            show: false, // Panel versteckt, wir bauen unser eigenes
             createMarker: function() { return null; },
             lineOptions: { styles: [{color: '#ea580c', opacity: 0.8, weight: 6}] }
         }).addTo(map);
 
-        // --- RESIZER LOGIC ---
+        // Event Listener für Routen-Infos (Distanz/Zeit)
+        routingControl.on('routesfound', function(e) {
+            const routes = e.routes;
+            const summary = routes[0].summary;
+            // Umrechnen in km und minuten
+            const distKm = (summary.totalDistance / 1000).toFixed(1);
+            const timeMin = Math.round(summary.totalTime / 60);
+            
+            // UI Update
+            document.getElementById('route-stats').classList.remove('hidden');
+            document.getElementById('route-dist').innerText = distKm + " km gesamt";
+            document.getElementById('route-time').innerText = "~" + timeMin + " min";
+        });
+
+        // --- 5. NEUE ROUTEN-FUNKTIONEN ---
+
+        window.calculateRouteToStart = function() {
+            const btn = document.getElementById('btn-calc-route');
+            const originalText = btn.innerHTML;
+            
+            // Ladezustand
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Orte Standort...';
+            btn.disabled = true;
+
+            if (!navigator.geolocation) {
+                alert("Geolocation wird nicht unterstützt.");
+                resetBtn();
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(position => {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+                
+                // Neue Wegpunkte: User -> Station 1 -> Station 2 ...
+                const newWaypoints = [
+                    L.latLng(userLat, userLng),
+                    ...originalWaypoints
+                ];
+                
+                // Routing aktualisieren
+                routingControl.setWaypoints(newWaypoints);
+                
+                // User Marker setzen
+                if (userMarker) map.removeLayer(userMarker);
+                const gpsIcon = L.divIcon({
+                    className: 'gps-wrapper',
+                    html: '<div class="gps-marker"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
+                userMarker = L.marker([userLat, userLng], {icon: gpsIcon}).addTo(map);
+                
+                // Kamera auf User zentrieren
+                map.flyTo([userLat, userLng], 15);
+
+                // UI Status ändern
+                btn.classList.add('hidden');
+                document.getElementById('btn-reset-route').classList.remove('hidden');
+                
+                // Button Reset (falls er später wieder eingeblendet wird)
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+            }, error => {
+                alert("Standortzugriff verweigert oder Fehler: " + error.message);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+
+        window.resetRoute = function() {
+            // Zurück zur ursprünglichen Tour (Station 1 -> Ende)
+            routingControl.setWaypoints(originalWaypoints);
+            
+            // Buttons toggeln
+            document.getElementById('btn-calc-route').classList.remove('hidden');
+            document.getElementById('btn-reset-route').classList.add('hidden');
+            document.getElementById('route-stats').classList.add('hidden');
+            
+            // Kamera zurück zum Start
+            map.flyTo(originalWaypoints[0], 15);
+        }
+
+
+        // --- Standard Logic ---
+        const modal = document.getElementById('info-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalText = document.getElementById('modal-text');
+        const modalImg = document.getElementById('modal-img');
+        const modalSource = document.getElementById('modal-source');
+
+        window.openModal = function(index) {
+            const data = tourStops[index];
+            modalTitle.innerText = data.title;
+            modalText.innerHTML = data.longText;
+            modalImg.src = data.img;
+            modalSource.innerText = "Quelle: " + (data.source || "Keine Angabe");
+            modal.classList.remove('hidden');
+        }
+
+        window.closeModal = function() {
+            modal.classList.add('hidden');
+        }
+
         const resizer = document.getElementById('resizer');
         const sidebar = document.getElementById('sidebar');
 
-        // Initialisierung Drag
         resizer.addEventListener('mousedown', (e) => {
             e.preventDefault();
             resizer.classList.add('resizing');
-            
-            // Mousemove Event hinzufügen
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
-            
-            // Iframe/Selection Protection (damit Maus nicht "hängen" bleibt)
             document.body.style.cursor = 'col-resize';
             document.body.style.userSelect = 'none';
         });
 
         function handleMouseMove(e) {
-            // Berechnung: Neue Breite = Gesamtbreite - Mausposition
-            // (weil Sidebar rechts ist)
             const newWidth = window.innerWidth - e.clientX;
-            
-            // Limits beachten (Min 250px, Max 800px)
             if (newWidth > 250 && newWidth < 800) {
                 sidebar.style.width = newWidth + 'px';
-                
-                // WICHTIG: Map muss Größe neu berechnen, wenn Container sich ändert
                 map.invalidateSize();
             }
         }
@@ -305,48 +492,24 @@
             resizer.classList.remove('resizing');
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
-            
-            // Listener entfernen
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         }
 
-
-        // --- Helper Funktionen ---
-        function startTour() {
-            if (markers.length > 0) {
-                map.flyTo(waypoints[0], 16, { duration: 1.5 });
-                setTimeout(() => {
-                    markers[0].openPopup();
-                    document.getElementById('sidebar').scrollTop = 0;
-                }, 1600);
-            }
-        }
-
         let userMarker = null;
-        function locateUser() {
+        window.locateUser = function() {
             if (!navigator.geolocation) { alert("Geolocation nicht verfügbar"); return; }
             const btnIcon = document.querySelector('.fa-location-arrow');
             btnIcon.classList.add('fa-spin');
-
             navigator.geolocation.getCurrentPosition((pos) => {
                 const lat = pos.coords.latitude;
                 const lng = pos.coords.longitude;
                 if (userMarker) map.removeLayer(userMarker);
-
-                const gpsIcon = L.divIcon({
-                    className: 'gps-wrapper',
-                    html: '<div class="gps-marker"></div>',
-                    iconSize: [20, 20],
-                    iconAnchor: [10, 10]
-                });
+                const gpsIcon = L.divIcon({ className: 'gps-wrapper', html: '<div class="gps-marker"></div>', iconSize: [20, 20], iconAnchor: [10, 10] });
                 userMarker = L.marker([lat, lng], {icon: gpsIcon}).addTo(map);
                 map.flyTo([lat, lng], 16);
                 btnIcon.classList.remove('fa-spin');
-            }, (err) => {
-                alert("Fehler: " + err.message);
-                btnIcon.classList.remove('fa-spin');
-            });
+            }, (err) => { alert("Fehler: " + err.message); btnIcon.classList.remove('fa-spin'); });
         }
     </script>
 </body>
