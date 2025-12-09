@@ -258,11 +258,16 @@
             </div>
         </div>
 
-        <!-- Reset View Button (ID hinzugefügt für Tutorial) -->
-        <button id="btn-reset-view" onclick="resetMapType()" class="hidden absolute top-24 right-4 z-[500] bg-white text-gray-800 p-3 rounded-lg shadow-lg font-bold text-xs border border-gray-300 flex items-center gap-2 hover:bg-gray-50 transition-all">
-            <i class="fa-solid fa-map"></i> Karte zurücksetzen
-        </button>
-
+        <!-- NEU: Map Type Switch (Oben Rechts, ansprechend) -->
+        <div id="map-type-switch" class="absolute top-24 right-4 z-[500] pointer-events-auto bg-white rounded-xl shadow-lg border border-gray-200 p-1.5 flex gap-1">
+            <button id="switch-osm" onclick="setMapLayer('osm')" class="map-switch-btn bg-orange-600 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors flex items-center gap-1">
+                <i class="fa-solid fa-map-location-dot"></i> Karte
+            </button>
+            <button id="switch-sat" onclick="setMapLayer('sat')" class="map-switch-btn bg-white text-gray-700 hover:bg-gray-100 text-xs font-bold py-2 px-3 rounded-lg transition-colors flex items-center gap-1">
+                <i class="fa-solid fa-earth-europe"></i> Satellit
+            </button>
+        </div>
+        
         <!-- Location Button (ID hinzugefügt für Tutorial) -->
         <div id="location-btn-wrapper" class="absolute bottom-8 right-4 z-[500] flex flex-col gap-3">
             <button onclick="locateUser()" class="bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110" title="Mein Standort">
@@ -326,17 +331,10 @@
                 text: "Bist du noch nicht am Startpunkt? Hier kannst du deinen aktuellen Standort nutzen, um dich zum Museumsquartier navigieren zu lassen."
             },
             {
-                target: 'btn-reset-view',
+                // Aktualisierter Target und Text für den neuen Switch
+                target: 'map-type-switch',
                 title: "Karten-Ansichten",
-                text: "Du kannst über die Stations-Kacheln in die Satelliten-Zoom-Ansicht wechseln. Dieser Button erscheint dann, um jederzeit zur Standard-Karte zurückzukehren.",
-                // Damit der Button für das Tutorial sichtbar ist
-                onEnter: () => document.getElementById('btn-reset-view').classList.remove('hidden'), 
-                onExit: () => {
-                    // Nur verstecken, wenn Satelliten-Layer NICHT aktiv ist
-                    if (!map.hasLayer(satLayer)) {
-                        document.getElementById('btn-reset-view').classList.add('hidden');
-                    }
-                }
+                text: "Wechsle hier jederzeit zwischen der Standard-Straßenkarte ('Karte') und der detaillierten Satelliten-Ansicht, um die Umgebung besser zu erkunden. Die Stations-Kacheln bieten zudem einen 'Satelliten-Zoom' an.",
             },
             {
                 target: 'location-btn-wrapper',
@@ -467,27 +465,41 @@
         const map = L.map('map', { zoomControl: false }).setView([52.2742, 8.0435], 15);
         const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
         const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri' });
-        // Layer Control ist nicht mehr nötig, da wir das Sat-Layer über den Button steuern
-        // const layerControl = L.control.layers({ "Karte": osmLayer, "Satellit": satLayer }, null, { position: 'topright' }).addTo(map);
 
-        window.activateDroneView = function(lat, lng) {
-            // Stelle sicher, dass Satelliten-Layer hinzugefügt wird
-            if (!map.hasLayer(satLayer)) {
-                map.removeLayer(osmLayer);
-                map.addLayer(satLayer);
+        /**
+         * Schaltet zwischen OSM- und Satelliten-Layer um und aktualisiert die Button-Ästhetik.
+         * @param {string} type - 'osm' für Standardkarte oder 'sat' für Satellitenbild.
+         */
+        window.setMapLayer = function(type) {
+            const osmBtn = document.getElementById('switch-osm');
+            const satBtn = document.getElementById('switch-sat');
+
+            if (type === 'sat') {
+                if (!map.hasLayer(satLayer)) {
+                    map.removeLayer(osmLayer);
+                    map.addLayer(satLayer);
+                }
+                satBtn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-100');
+                satBtn.classList.add('bg-orange-600', 'text-white');
+                osmBtn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-100');
+                osmBtn.classList.remove('bg-orange-600', 'text-white');
+            } else { // type === 'osm'
+                if (!map.hasLayer(osmLayer)) {
+                    map.removeLayer(satLayer);
+                    map.addLayer(osmLayer);
+                }
+                osmBtn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-100');
+                osmBtn.classList.add('bg-orange-600', 'text-white');
+                satBtn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-100');
+                satBtn.classList.remove('bg-orange-600', 'text-white');
             }
-            map.flyTo([lat, lng], 19, { duration: 2 });
-            document.getElementById('btn-reset-view').classList.remove('hidden');
         }
 
-        window.resetMapType = function() {
-            // Stelle sicher, dass OSM-Layer hinzugefügt wird
-            if (map.hasLayer(satLayer)) {
-                map.removeLayer(satLayer);
-                map.addLayer(osmLayer);
-            }
-            map.setZoom(16);
-            document.getElementById('btn-reset-view').classList.add('hidden');
+        window.activateDroneView = function(lat, lng) {
+            // Schaltet zur Satellitenansicht und fliegt dorthin
+            setMapLayer('sat'); 
+            map.flyTo([lat, lng], 19, { duration: 2 });
+            showToast("Satelliten-Zoom aktiviert.", 2000);
         }
 
         const markers = [];
