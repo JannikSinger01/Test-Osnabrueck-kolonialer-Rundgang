@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Koloniale Spuren Osnabrück | Digitale Stadtführung</title>
     
-    <!-- Tailwind CSS für das Styling -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Leaflet CSS & JS -->
@@ -17,7 +17,7 @@
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=Inter:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap');
 
         :root {
             --vintage-paper: #f4f1ea;
@@ -35,14 +35,9 @@
             overflow: hidden;
         }
 
-        h1, h2, h3 {
-            font-family: 'Crimson Pro', serif;
-        }
+        h1, h2, h3, .font-serif { font-family: 'Crimson Pro', serif; }
 
-        #map {
-            flex-grow: 1;
-            z-index: 1;
-        }
+        #map { flex-grow: 1; z-index: 1; }
 
         .custom-popup .leaflet-popup-content-wrapper {
             background: var(--vintage-paper);
@@ -51,10 +46,7 @@
             border: 1px solid var(--accent-gold);
         }
 
-        .sidebar {
-            transition: transform 0.3s ease-in-out;
-            z-index: 1000;
-        }
+        .sidebar { transition: transform 0.3s ease-in-out; z-index: 1000; }
 
         .station-card:hover {
             border-left: 4px solid var(--accent-gold);
@@ -67,26 +59,109 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
         }
 
-        /* Verstecke Standard-Routing-Anweisungen */
-        .leaflet-routing-container {
-            display: none !important;
-        }
+        .leaflet-routing-container { display: none !important; }
 
         /* Navigator Panel Styling */
         #navigator-panel {
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.2);
-            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        #nav-info-card {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            backdrop-filter: blur(8px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Animation für den Hinweis-Pfeil */
+        @keyframes bounce-up-down {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(6px); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-up-down 1.5s infinite ease-in-out;
+        }
+
+        /* Intro Overlay Animation */
+        #intro-overlay {
+            transition: opacity 0.8s ease-in-out, visibility 0.8s;
+        }
+        #intro-overlay.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        /* Dekorative Rahmen für Intro */
+        .intro-frame {
+            border: 1px solid rgba(166, 124, 0, 0.3);
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
+    <!-- Full Screen Intro Overlay -->
+    <div id="intro-overlay" class="fixed inset-0 z-[5000] bg-[#f4f1ea] flex flex-col justify-center items-center overflow-y-auto">
+        
+        <!-- Dekorative Rahmen -->
+        <div class="absolute inset-4 intro-frame z-0"></div>
+        <div class="absolute inset-6 intro-frame z-0"></div>
+
+        <!-- Container verbreitert auf max-w-7xl für mehr Platz -->
+        <div class="relative z-10 max-w-7xl w-full px-8 md:px-12 py-12 flex flex-col md:flex-row gap-8 lg:gap-16 items-center h-full justify-center">
+            
+            <!-- Linke Spalte: Titel & Branding (Jetzt schmaler: ca. 33%) -->
+            <div class="md:w-1/3 text-center md:text-left space-y-6">
+                <div class="inline-block border-b-2 border-[#a67c00] pb-2 mb-2">
+                    <span class="text-[#a67c00] text-sm font-bold uppercase tracking-[0.25em]">Universität Osnabrück</span>
+                </div>
+                <h1 class="text-5xl md:text-6xl lg:text-7xl font-serif text-[#2d3436] leading-[1.1]">
+                    Koloniale<br>
+                    <span class="italic text-[#a67c00]">Spuren</span><br>
+                    Osnabrück
+                </h1>
+                <p class="text-base text-gray-500 font-light italic max-w-sm">
+                    Eine digitale Kartierung historischer Verflechtungen, Handelswege und Erinnerungskultur.
+                </p>
+            </div>
+
+            <!-- Rechte Spalte: Inhalt (Jetzt breiter: ca. 66%) -->
+            <div class="md:w-2/3 w-full space-y-8 bg-white/60 backdrop-blur-md p-10 md:p-12 border-l-4 border-[#a67c00] shadow-sm rounded-r-lg">
+                <div class="prose prose-lg md:prose-xl text-gray-700 leading-relaxed font-serif max-w-none">
+                    <p>
+                        <strong class="text-[#2d3436]">Willkommen zur digitalen Spurensuche.</strong><br>
+                        Osnabrück wirkt auf den ersten Blick weit entfernt von der deutschen Kolonialgeschichte. Doch der Schein trügt.
+                        Handelsgüter wie Kaffee, Baumwolle oder Tabak prägten den Reichtum lokaler Kaufmannsfamilien, während Völkerschauen und koloniale Vereine das Weltbild der Bürger formten.
+                    </p>
+                    <p>
+                        Diese Web-App macht die unsichtbaren Verbindungen sichtbar: Wir beleuchten Biografien von Akteuren, die vom Überseehandel profitierten, und untersuchen Denkmäler im Stadtbild, die bis heute ein fragwürdiges Heldenbild transportieren oder unkommentiert im öffentlichen Raum stehen.
+                    </p>
+                    <p>
+                        Begleiten Sie uns auf einem Rundgang durch die Innenstadt und entdecken Sie die Schichten der Geschichte neu.
+                    </p>
+                    <p class="text-base italic text-gray-500 mt-4 border-t border-gray-200 pt-4">
+                        Nutzen Sie den interaktiven Navigator (unten rechts), um die Stationen vor Ort via GPS zu finden, oder erkunden Sie die historischen Hintergründe bequem von zu Hause aus.
+                    </p>
+                </div>
+
+                <div class="pt-4">
+                    <button id="closeIntro" class="group w-full md:w-auto bg-[#2d3436] text-white px-8 py-4 text-lg font-medium tracking-wide hover:bg-[#a67c00] transition-colors duration-300 flex items-center justify-center md:justify-start gap-4 shadow-lg rounded-sm">
+                        <span>Rundgang beginnen</span>
+                        <svg class="transform group-hover:translate-x-2 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                    <p class="text-[10px] text-gray-400 mt-4 uppercase tracking-wider">
+                        Projektstatus: Prototyp • Version 1.0
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="bg-[#2d3436] text-white p-4 shadow-md flex justify-between items-center relative z-[1001]">
         <div>
-            <h1 class="text-xl md:text-2xl font-semibold tracking-tight">Koloniale Spuren Osnabrück</h1>
-            <p class="text-xs text-gray-400 font-light italic">Ein geschichtswissenschaftliches Projekt zur Stadtführung</p>
+            <h1 class="text-xl md:text-2xl font-semibold tracking-tight font-serif">Koloniale Spuren Osnabrück</h1>
+            <p class="text-xs text-gray-400 font-light italic">Ein geschichtswissenschaftliches Projekt</p>
         </div>
         <button id="toggleSidebar" class="md:hidden bg-accent-gold p-2 rounded">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -98,8 +173,8 @@
         <aside id="sidebar" class="sidebar absolute md:relative w-full md:w-96 bg-[#fdfcf9] border-r border-gray-200 h-full overflow-y-auto transform -translate-x-full md:translate-x-0 shadow-xl">
             <div class="p-6">
                 <div id="intro-view">
-                    <h2 class="text-2xl mb-4 border-b border-gray-200 pb-2">Stationen der Tour</h2>
-                    <p class="text-sm text-gray-600 mb-6">Entdecken Sie die kolonialen Verflechtungen Osnabrücks vor Ort.</p>
+                    <h2 class="text-2xl mb-4 border-b border-gray-200 pb-2 font-serif">Stationen der Tour</h2>
+                    <p class="text-sm text-gray-600 mb-6">Wählen Sie einen Ort, um mehr über koloniale Verflechtungen zu erfahren.</p>
                     <div id="station-list" class="space-y-4"></div>
                 </div>
 
@@ -107,9 +182,9 @@
                     <button id="backToList" class="text-sm text-accent-gold flex items-center mb-4 hover:underline">
                         <svg class="mr-1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> Zurück zur Übersicht
                     </button>
-                    <h2 id="detail-title" class="text-2xl mb-2"></h2>
+                    <h2 id="detail-title" class="text-2xl mb-2 font-serif"></h2>
                     <div id="detail-image" class="w-full h-48 bg-gray-200 rounded mb-4 flex items-center justify-center italic text-gray-400 text-sm border">
-                        [Bildplatzhalter: Historische Ansicht]
+                        
                     </div>
                     <div id="detail-content" class="text-sm leading-relaxed text-gray-700 space-y-4"></div>
                     <div class="mt-8 pt-4 border-t">
@@ -125,31 +200,54 @@
         <!-- Map -->
         <div id="map"></div>
 
-        <!-- Navigator Overlay (Bottom Right) -->
-        <div id="navigator-panel" class="absolute bottom-6 right-6 z-[1000] flex flex-col items-end gap-3 pointer-events-none">
+        <!-- Navigator Overlay -->
+        <div id="navigator-panel" class="absolute bottom-6 right-6 flex flex-col items-end gap-3 pointer-events-none">
             
-            <!-- GPS Status / Info Card -->
-            <div id="nav-info-card" class="bg-white/95 p-4 rounded-xl border border-gray-200 w-64 md:w-72 pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0">
-                <div class="flex justify-between items-start mb-2">
-                    <span class="text-[10px] uppercase tracking-widest text-accent-gold font-bold">Nächste Station</span>
-                    <span id="nav-dist" class="text-xs font-mono bg-gray-100 px-2 py-1 rounded">-- m</span>
-                </div>
-                <h4 id="nav-next-title" class="text-sm font-bold truncate">Standort aktivieren...</h4>
+            <!-- Dynamic Info Card -->
+            <div id="nav-info-card" class="bg-white/95 p-4 rounded-xl border border-gray-200 w-64 md:w-72 pointer-events-auto shadow-2xl">
                 
-                <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-gray-100">
-                    <div>
-                        <p class="text-[9px] text-gray-400 uppercase">Gehzeit ca.</p>
-                        <p id="nav-time" class="text-sm font-semibold">-- Min.</p>
+                <!-- Initial State: Routenplaner Info -->
+                <div id="nav-initial-state">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] uppercase tracking-widest text-accent-gold font-bold italic">Navigator</span>
+                        <div class="h-2 w-2 rounded-full bg-red-500 animate-pulse"></div>
                     </div>
-                    <div>
-                        <p class="text-[9px] text-gray-400 uppercase">Tour Gesamt</p>
-                        <p id="nav-total" class="text-sm font-semibold">~ 45 Min.</p>
+                    <h4 class="text-sm font-bold text-charcoal">Routenplaner</h4>
+                    <p class="text-[11px] text-gray-500 mt-1 leading-snug">
+                        Aktivieren Sie Ihren Standort, um Entfernungen und Gehzeiten zu den Stationen zu sehen.
+                    </p>
+                    <!-- Pfeil zeigt nun nach rechts unten auf den Button -->
+                    <div class="flex justify-end pr-4 mt-4">
+                        <svg class="animate-bounce-slow text-accent-gold" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+
+                <!-- Active State: Tracking Info (Hidden initially) -->
+                <div id="nav-active-state" class="hidden">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] uppercase tracking-widest text-accent-gold font-bold">Nächste Station</span>
+                        <span id="nav-dist" class="text-xs font-mono bg-gray-100 px-2 py-1 rounded">-- m</span>
+                    </div>
+                    <h4 id="nav-next-title" class="text-sm font-bold truncate">Berechne...</h4>
+                    
+                    <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-gray-100">
+                        <div>
+                            <p class="text-[9px] text-gray-400 uppercase">Gehzeit ca.</p>
+                            <p id="nav-time" class="text-sm font-semibold text-charcoal">-- Min.</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] text-gray-400 uppercase">Status</p>
+                            <p class="text-sm font-semibold text-green-600 flex items-center">
+                                <span class="h-1.5 w-1.5 rounded-full bg-green-600 mr-1"></span> Aktiv
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Main GPS Action Button -->
-            <button id="locateMe" class="bg-white p-4 rounded-full shadow-lg border border-gray-100 hover:bg-gray-50 active:scale-90 transition-all pointer-events-auto">
+            <!-- GPS Button -->
+            <button id="locateMe" class="bg-white p-4 rounded-full shadow-lg border border-gray-100 hover:bg-gray-50 active:scale-90 transition-all pointer-events-auto group relative">
+                <span class="absolute -top-12 right-0 bg-charcoal text-white text-[10px] py-1 px-3 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">GPS aktivieren</span>
                 <svg id="gps-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a67c00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line></svg>
             </button>
         </div>
@@ -166,7 +264,6 @@
             { id: 3, title: "Ledenhof", coords: [52.2725, 8.0445], short: "Globaler Warenimport.", content: "<p>Sitz wohlhabender Familien, die mit Kolonialwaren handelten.</p>" }
         ];
 
-        // Layer-Setup
         const lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '© CARTO' });
         const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '© Esri' });
 
@@ -179,14 +276,20 @@
         let userMarker = null;
 
         function initApp() {
+            // Close Intro Event
+            document.getElementById('closeIntro').onclick = () => {
+                const overlay = document.getElementById('intro-overlay');
+                overlay.classList.add('fade-out');
+            };
+
             const listContainer = document.getElementById('station-list');
             stations.forEach(station => {
                 const marker = L.marker(station.coords).addTo(map);
-                marker.bindPopup(`<div class="font-bold">${station.title}</div><button onclick="showDetail(${station.id})" class="text-accent-gold text-xs underline mt-1">Details</button>`, { className: 'custom-popup' });
+                marker.bindPopup(`<div class="font-bold font-serif">${station.title}</div><button onclick="showDetail(${station.id})" class="text-accent-gold text-xs underline mt-1">Details</button>`, { className: 'custom-popup' });
 
                 const card = document.createElement('div');
                 card.className = 'station-card p-4 bg-white border border-gray-100 rounded shadow-sm cursor-pointer';
-                card.innerHTML = `<h3 class="font-bold">${station.title}</h3><p class="text-[11px] text-gray-400">${station.short}</p>`;
+                card.innerHTML = `<h3 class="font-bold font-serif text-lg">${station.title}</h3><p class="text-[11px] text-gray-400">${station.short}</p>`;
                 card.onclick = () => { showDetail(station.id); map.flyTo(station.coords, 17); };
                 listContainer.appendChild(card);
             });
@@ -212,11 +315,9 @@
         function updateNavigator() {
             if (!userLocation) return;
 
-            // Zeige Card
-            const card = document.getElementById('nav-info-card');
-            card.classList.remove('opacity-0', 'translate-y-2');
+            document.getElementById('nav-initial-state').classList.add('hidden');
+            document.getElementById('nav-active-state').classList.remove('hidden');
 
-            // Finde die nächste Station (Luftlinie)
             let nearest = null;
             let minDist = Infinity;
 
@@ -230,12 +331,8 @@
 
             if (nearest) {
                 document.getElementById('nav-next-title').innerText = nearest.title;
-                
-                // Distanz Formatierung
                 const distText = minDist > 1000 ? (minDist/1000).toFixed(1) + " km" : Math.round(minDist) + " m";
                 document.getElementById('nav-dist').innerText = distText;
-
-                // Zeitberechnung (ca. 80m pro Minute)
                 const minutes = Math.ceil(minDist / 80);
                 document.getElementById('nav-time').innerText = minutes + " Min.";
             }
