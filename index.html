@@ -72,15 +72,6 @@
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Animation für den Hinweis-Pfeil */
-        @keyframes bounce-up-down {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(6px); }
-        }
-        .animate-bounce-slow {
-            animation: bounce-up-down 1.5s infinite ease-in-out;
-        }
-
         /* Intro Overlay Animation */
         #intro-overlay {
             transition: opacity 0.8s ease-in-out, visibility 0.8s;
@@ -91,26 +82,86 @@
             pointer-events: none;
         }
         
-        /* Dekorative Rahmen für Intro */
+        /* Animation für den Hinweis-Pfeil */
+        @keyframes bounce-up-down {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(6px); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-up-down 1.5s infinite ease-in-out;
+        }
+        
         .intro-frame {
             border: 1px solid rgba(166, 124, 0, 0.3);
             pointer-events: none;
         }
+
+        /* --- TUTORIAL STYLES --- */
+        #tutorial-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 9000;
+            pointer-events: none; /* Klicks gehen durch, außer auf Interaktionselemente */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s;
+        }
+
+        #tutorial-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Der Spotlight-Effekt */
+        #tutorial-spotlight {
+            position: absolute;
+            border: 2px solid var(--accent-gold);
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75); /* Verdunkelt den Rest */
+            border-radius: 8px;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none;
+        }
+
+        /* Die Sprechblase */
+        #tutorial-tooltip {
+            position: absolute;
+            width: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            pointer-events: auto;
+            transition: all 0.4s ease;
+            z-index: 9002;
+        }
+        
+        /* Kleiner Pfeil am Tooltip (Optional, hier vereinfacht weggelassen für flexible Positionierung) */
+
     </style>
 </head>
 <body>
 
+    <!-- TUTORIAL OVERLAY ELEMENTS -->
+    <div id="tutorial-overlay">
+        <div id="tutorial-spotlight"></div>
+        <div id="tutorial-tooltip">
+            <h4 id="tut-title" class="text-[#a67c00] font-bold uppercase text-xs tracking-wider mb-2">Schritt 1</h4>
+            <p id="tut-text" class="text-charcoal text-sm leading-relaxed mb-4">Erklärungstext hier.</p>
+            <div class="flex justify-between items-center border-t border-gray-100 pt-3">
+                <button id="tut-skip" class="text-xs text-gray-400 hover:text-gray-600">Überspringen</button>
+                <button id="tut-next" class="bg-[#2d3436] text-white text-xs px-4 py-2 rounded hover:bg-[#a67c00] transition-colors">Weiter</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Full Screen Intro Overlay -->
     <div id="intro-overlay" class="fixed inset-0 z-[5000] bg-[#f4f1ea] flex flex-col justify-center items-center overflow-y-auto">
-        
-        <!-- Dekorative Rahmen -->
         <div class="absolute inset-4 intro-frame z-0"></div>
         <div class="absolute inset-6 intro-frame z-0"></div>
 
-        <!-- Container verbreitert auf max-w-7xl für mehr Platz -->
         <div class="relative z-10 max-w-7xl w-full px-8 md:px-12 py-12 flex flex-col md:flex-row gap-8 lg:gap-16 items-center h-full justify-center">
             
-            <!-- Linke Spalte: Titel & Branding (Jetzt schmaler: ca. 33%) -->
+            <!-- Linke Spalte -->
             <div class="md:w-1/3 text-center md:text-left space-y-6">
                 <div class="inline-block border-b-2 border-[#a67c00] pb-2 mb-2">
                     <span class="text-[#a67c00] text-sm font-bold uppercase tracking-[0.25em]">Universität Osnabrück</span>
@@ -125,7 +176,7 @@
                 </p>
             </div>
 
-            <!-- Rechte Spalte: Inhalt (Jetzt breiter: ca. 66%) -->
+            <!-- Rechte Spalte -->
             <div class="md:w-2/3 w-full space-y-8 bg-white/60 backdrop-blur-md p-10 md:p-12 border-l-4 border-[#a67c00] shadow-sm rounded-r-lg">
                 <div class="prose prose-lg md:prose-xl text-gray-700 leading-relaxed font-serif max-w-none">
                     <p>
@@ -134,10 +185,7 @@
                         Handelsgüter wie Kaffee, Baumwolle oder Tabak prägten den Reichtum lokaler Kaufmannsfamilien, während Völkerschauen und koloniale Vereine das Weltbild der Bürger formten.
                     </p>
                     <p>
-                        Diese Web-App macht die unsichtbaren Verbindungen sichtbar: Wir beleuchten Biografien von Akteuren, die vom Überseehandel profitierten, und untersuchen Denkmäler im Stadtbild, die bis heute ein fragwürdiges Heldenbild transportieren oder unkommentiert im öffentlichen Raum stehen.
-                    </p>
-                    <p>
-                        Begleiten Sie uns auf einem Rundgang durch die Innenstadt und entdecken Sie die Schichten der Geschichte neu.
+                        Diese Web-App macht die unsichtbaren Verbindungen sichtbar: Wir beleuchten Biografien von Akteuren, die vom Überseehandel profitierten, und untersuchen Denkmäler im Stadtbild.
                     </p>
                     <p class="text-base italic text-gray-500 mt-4 border-t border-gray-200 pt-4">
                         Nutzen Sie den interaktiven Navigator (unten rechts), um die Stationen vor Ort via GPS zu finden, oder erkunden Sie die historischen Hintergründe bequem von zu Hause aus.
@@ -150,7 +198,7 @@
                         <svg class="transform group-hover:translate-x-2 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </button>
                     <p class="text-[10px] text-gray-400 mt-4 uppercase tracking-wider">
-                        Projektstatus: Prototyp • Version 1.0
+                        Version Web-App-Slam
                     </p>
                 </div>
             </div>
@@ -158,10 +206,9 @@
     </div>
 
     <!-- Header -->
-    <header class="bg-[#2d3436] text-white p-4 shadow-md flex justify-between items-center relative z-[1001]">
+    <header id="main-header" class="bg-[#2d3436] text-white p-4 shadow-md flex justify-between items-center relative z-[1001]">
         <div>
-            <h1 class="text-xl md:text-2xl font-semibold tracking-tight font-serif">Koloniale Spuren Osnabrück</h1>
-            <p class="text-xs text-gray-400 font-light italic">Ein geschichtswissenschaftliches Projekt</p>
+            <h1 class="text-xl md:text-2xl font-semibold tracking-tight font-serif">Koloniale Spurensuche in Osnabrück</h1>
         </div>
         <button id="toggleSidebar" class="md:hidden bg-accent-gold p-2 rounded">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -203,10 +250,7 @@
         <!-- Navigator Overlay -->
         <div id="navigator-panel" class="absolute bottom-6 right-6 flex flex-col items-end gap-3 pointer-events-none">
             
-            <!-- Dynamic Info Card -->
             <div id="nav-info-card" class="bg-white/95 p-4 rounded-xl border border-gray-200 w-64 md:w-72 pointer-events-auto shadow-2xl">
-                
-                <!-- Initial State: Routenplaner Info -->
                 <div id="nav-initial-state">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-[10px] uppercase tracking-widest text-accent-gold font-bold italic">Navigator</span>
@@ -216,13 +260,11 @@
                     <p class="text-[11px] text-gray-500 mt-1 leading-snug">
                         Aktivieren Sie Ihren Standort, um Entfernungen und Gehzeiten zu den Stationen zu sehen.
                     </p>
-                    <!-- Pfeil zeigt nun nach rechts unten auf den Button -->
                     <div class="flex justify-end pr-4 mt-4">
                         <svg class="animate-bounce-slow text-accent-gold" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
                     </div>
                 </div>
 
-                <!-- Active State: Tracking Info (Hidden initially) -->
                 <div id="nav-active-state" class="hidden">
                     <div class="flex justify-between items-start mb-2">
                         <span class="text-[10px] uppercase tracking-widest text-accent-gold font-bold">Nächste Station</span>
@@ -245,7 +287,6 @@
                 </div>
             </div>
 
-            <!-- GPS Button -->
             <button id="locateMe" class="bg-white p-4 rounded-full shadow-lg border border-gray-100 hover:bg-gray-50 active:scale-90 transition-all pointer-events-auto group relative">
                 <span class="absolute -top-12 right-0 bg-charcoal text-white text-[10px] py-1 px-3 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">GPS aktivieren</span>
                 <svg id="gps-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a67c00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line></svg>
@@ -275,11 +316,139 @@
         let routingControl = null;
         let userMarker = null;
 
+        // --- TUTORIAL LOGIK ---
+        let currentStepIndex = 0;
+        const tutorialSteps = [
+            {
+                elementId: 'sidebar', // Desktop Ziel
+                altElementId: 'toggleSidebar', // Mobile Ziel
+                title: 'Historische Stationen',
+                text: 'Hier finden Sie alle Orte der Tour. Wählen Sie einen Eintrag aus, um mehr über die Geschichte und kolonialen Hintergründe zu erfahren.'
+            },
+            {
+                elementId: 'map', 
+                title: 'Interaktive Karte',
+                text: 'Die Karte zeigt Ihnen die Standorte im heutigen Stadtbild. Sie können zoomen und die Marker anklicken.'
+            },
+            {
+                // Leaflet controls haben keine ID, wir nutzen querySelector in der Funktion
+                selector: '.leaflet-control-layers',
+                title: 'Zeitreise-Ansicht',
+                text: 'Wechseln Sie hier oben rechts zwischen der reduzierten Archiv-Karte und aktuellen Satellitenbildern.'
+            },
+            {
+                elementId: 'navigator-panel',
+                title: 'GPS-Navigator',
+                text: 'Starten Sie hier den Tour-Modus. Sobald Sie Ihr GPS aktivieren, zeigen wir Ihnen den Weg und die Entfernung zur nächsten Station.'
+            }
+        ];
+
+        function startTutorial() {
+            document.getElementById('tutorial-overlay').classList.add('active');
+            currentStepIndex = 0;
+            renderTutorialStep();
+        }
+
+        function endTutorial() {
+            document.getElementById('tutorial-overlay').classList.remove('active');
+        }
+
+        function renderTutorialStep() {
+            const step = tutorialSteps[currentStepIndex];
+            const spotlight = document.getElementById('tutorial-spotlight');
+            const tooltip = document.getElementById('tutorial-tooltip');
+            
+            // Ziel-Element finden (mit Fallback für Mobile)
+            let target = null;
+            if (step.elementId) target = document.getElementById(step.elementId);
+            if (step.selector) target = document.querySelector(step.selector);
+            
+            // Mobile Weiche: Wenn das Element auf dem Screen versteckt ist oder wir auf Mobile sind
+            const isMobile = window.innerWidth < 768;
+            if (isMobile && step.altElementId) {
+                target = document.getElementById(step.altElementId);
+            }
+
+            if (!target) {
+                console.error("Tutorial target not found", step);
+                endTutorial();
+                return;
+            }
+
+            // Position berechnen
+            const rect = target.getBoundingClientRect();
+            
+            // Spotlight setzen
+            spotlight.style.width = rect.width + 'px';
+            spotlight.style.height = rect.height + 'px';
+            spotlight.style.top = rect.top + 'px';
+            spotlight.style.left = rect.left + 'px';
+
+            // Text setzen
+            document.getElementById('tut-title').innerText = step.title;
+            document.getElementById('tut-text').innerText = step.text;
+            
+            // Button Text (beim letzten Schritt "Fertig")
+            const nextBtn = document.getElementById('tut-next');
+            nextBtn.innerText = (currentStepIndex === tutorialSteps.length - 1) ? "Starten" : "Weiter";
+
+            // Tooltip Positionierung (Smart)
+            // Versuche es rechts daneben zu platzieren, wenn Platz ist, sonst links, sonst drunter/drüber
+            const tooltipWidth = 340; // width + padding estimate
+            const tooltipHeight = 200; // height estimate
+            
+            let top = rect.top;
+            let left = rect.right + 20;
+
+            // Wenn rechts kein Platz ist (z.B. Mobile oder Element rechts)
+            if (left + tooltipWidth > window.innerWidth) {
+                // Dann links probieren
+                left = rect.left - tooltipWidth - 20;
+                // Wenn links auch kein Platz (Mobile)
+                if (left < 0) {
+                    left = 20; // Margin links
+                    // Dann drunter oder drüber
+                    if (rect.bottom + tooltipHeight < window.innerHeight) {
+                        top = rect.bottom + 20;
+                    } else {
+                        top = rect.top - tooltipHeight - 20;
+                    }
+                }
+            }
+            
+            // Begrenzung, damit es nicht oben raus rutscht
+            if (top < 10) top = 10;
+            // Begrenzung unten
+            if (top + tooltipHeight > window.innerHeight) top = window.innerHeight - tooltipHeight - 20;
+
+            tooltip.style.top = top + 'px';
+            tooltip.style.left = left + 'px';
+        }
+
+        // Tutorial Event Listeners
+        document.getElementById('tut-next').onclick = () => {
+            if (currentStepIndex < tutorialSteps.length - 1) {
+                currentStepIndex++;
+                renderTutorialStep();
+            } else {
+                endTutorial();
+            }
+        };
+        document.getElementById('tut-skip').onclick = endTutorial;
+
+
+        // --- INIT & LOGIC ---
+
         function initApp() {
-            // Close Intro Event
+            // Intro Button Logic -> Startet jetzt Tutorial
             document.getElementById('closeIntro').onclick = () => {
                 const overlay = document.getElementById('intro-overlay');
                 overlay.classList.add('fade-out');
+                
+                // Kurze Verzögerung, dann Tutorial starten
+                setTimeout(() => {
+                    startTutorial();
+                }, 600);
             };
 
             const listContainer = document.getElementById('station-list');
@@ -310,23 +479,16 @@
             setTimeout(() => { toast.style.opacity = '0'; }, 3000);
         }
 
-        // --- NAVIGATOR LOGIK ---
-
         function updateNavigator() {
             if (!userLocation) return;
-
             document.getElementById('nav-initial-state').classList.add('hidden');
             document.getElementById('nav-active-state').classList.remove('hidden');
 
             let nearest = null;
             let minDist = Infinity;
-
             stations.forEach(s => {
                 const dist = L.latLng(userLocation.lat, userLocation.lng).distanceTo(L.latLng(s.coords[0], s.coords[1]));
-                if (dist < minDist) {
-                    minDist = dist;
-                    nearest = s;
-                }
+                if (dist < minDist) { minDist = dist; nearest = s; }
             });
 
             if (nearest) {
@@ -339,10 +501,7 @@
         }
 
         function startRoute(destCoords) {
-            if (!userLocation) {
-                showToast("Bitte erst GPS aktivieren.");
-                return;
-            }
+            if (!userLocation) { showToast("Bitte erst GPS aktivieren."); return; }
             if (routingControl) map.removeControl(routingControl);
             routingControl = L.Routing.control({
                 waypoints: [L.latLng(userLocation.lat, userLocation.lng), L.latLng(destCoords[0], destCoords[1])],
@@ -355,14 +514,11 @@
 
         document.getElementById('locateMe').onclick = () => {
             if (!navigator.geolocation) return showToast("GPS nicht unterstützt.");
-            
             navigator.geolocation.watchPosition((position) => {
                 const { latitude, longitude } = position.coords;
                 userLocation = { lat: latitude, lng: longitude };
-
                 if (userMarker) userMarker.setLatLng([latitude, longitude]);
                 else userMarker = L.circleMarker([latitude, longitude], { radius: 8, fillColor: "#3b82f6", color: "#fff", weight: 2, fillOpacity: 0.8 }).addTo(map);
-                
                 document.getElementById('gps-icon').setAttribute('stroke', '#3b82f6');
                 updateNavigator();
             }, () => showToast("GPS Zugriff verweigert."), { enableHighAccuracy: true });
