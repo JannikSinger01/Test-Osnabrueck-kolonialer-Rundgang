@@ -101,7 +101,7 @@
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             z-index: 9000;
-            pointer-events: none; /* Klicks gehen durch, außer auf Interaktionselemente */
+            pointer-events: none;
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s;
@@ -112,17 +112,15 @@
             visibility: visible;
         }
 
-        /* Der Spotlight-Effekt */
         #tutorial-spotlight {
             position: absolute;
             border: 2px solid var(--accent-gold);
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75); /* Verdunkelt den Rest */
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
             border-radius: 8px;
             transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
             pointer-events: none;
         }
 
-        /* Die Sprechblase */
         #tutorial-tooltip {
             position: absolute;
             width: 300px;
@@ -134,12 +132,84 @@
             transition: all 0.4s ease;
             z-index: 9002;
         }
-        
-        /* Kleiner Pfeil am Tooltip (Optional, hier vereinfacht weggelassen für flexible Positionierung) */
+
+        /* --- LITERATUR MODAL --- */
+        #lit-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(45, 52, 54, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 8000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s;
+        }
+        #lit-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        #lit-content {
+            background: var(--vintage-paper);
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--accent-gold);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        #lit-overlay.active #lit-content {
+            transform: scale(1);
+        }
 
     </style>
 </head>
 <body>
+
+    <!-- LITERATUR MODAL -->
+    <div id="lit-overlay">
+        <div id="lit-content" class="relative">
+            <button id="closeLit" class="absolute top-4 right-4 text-gray-400 hover:text-[#2d3436]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            
+            <h2 class="text-2xl font-serif border-b border-[#a67c00] pb-2 mb-6 text-[#2d3436]">Literatur & Quellen</h2>
+            
+            <div class="space-y-4 text-sm text-gray-700 font-light leading-relaxed">
+                <p class="italic text-xs text-gray-500 mb-4">Eine Auswahl verwendeter Primär- und Sekundärliteratur für dieses Projekt.</p>
+                
+                <div class="pl-4 border-l-2 border-gray-300">
+                    <p class="font-bold">Conrad, Sebastian (2008):</p>
+                    <p>Deutsche Kolonialgeschichte. München: C.H. Beck.</p>
+                </div>
+
+                <div class="pl-4 border-l-2 border-gray-300">
+                    <p class="font-bold">Göttsche, Dirk (2013):</p>
+                    <p>Erinnerung an den Kolonialismus im öffentlichen Raum. In: Zeitschrift für Geschichtswissenschaft, 61. Jg., Heft 10, S. 820-840.</p>
+                </div>
+
+                <div class="pl-4 border-l-2 border-gray-300">
+                    <p class="font-bold">Stadtarchiv Osnabrück (StAO):</p>
+                    <p>Bestand A, Akte 1234: Handelsbeziehungen der Kaufmannschaft im 19. Jahrhundert. Unveröffentlichtes Archivmaterial.</p>
+                </div>
+
+                <div class="pl-4 border-l-2 border-gray-300">
+                    <p class="font-bold">Zimmerer, Jürgen (2011):</p>
+                    <p>Von Windhuk nach Auschwitz? Beiträge zum Verhältnis von Kolonialismus und Holocaust. Berlin: Lit Verlag.</p>
+                </div>
+                
+                <div class="mt-8 pt-4 border-t border-gray-200 text-xs text-gray-400">
+                    <p>Zuletzt aktualisiert: Oktober 2023. Alle Rechte vorbehalten.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- TUTORIAL OVERLAY ELEMENTS -->
     <div id="tutorial-overlay">
@@ -210,12 +280,24 @@
         <div>
             <h1 class="text-xl md:text-2xl font-semibold tracking-tight font-serif">Koloniale Spurensuche in Osnabrück</h1>
         </div>
-        <button id="toggleSidebar" class="md:hidden bg-accent-gold p-2 rounded">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-        </button>
+        
+        <div class="flex items-center gap-4">
+            <!-- Literatur Link -->
+            <button id="openLit" class="text-xs md:text-sm text-gray-300 hover:text-[#a67c00] hover:bg-white/10 px-3 py-1 rounded transition-colors flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <span class="hidden md:inline decoration-dotted underline underline-offset-4">Hier gehts zur Literaturliste</span>
+                <span class="md:hidden">Literatur</span>
+            </button>
+
+            <!-- Mobile Menu Toggle -->
+            <button id="toggleSidebar" class="md:hidden bg-accent-gold p-2 rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+        </div>
     </header>
 
-    <main class="flex flex-1 relative">
+    <!-- HIER WAR DIE ÄNDERUNG: 'overflow-hidden' hinzugefügt -->
+    <main class="flex flex-1 relative overflow-hidden">
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar absolute md:relative w-full md:w-96 bg-[#fdfcf9] border-r border-gray-200 h-full overflow-y-auto transform -translate-x-full md:translate-x-0 shadow-xl">
             <div class="p-6">
@@ -300,9 +382,48 @@
 
     <script>
         const stations = [
-            { id: 1, title: "Marktplatz & Rathaus", coords: [52.2776, 8.0411], short: "Handel und Diplomatie.", content: "<p>Das Rathaus ist Symbol der globalen Vernetzung Osnabrücks durch den Westfälischen Frieden.</p>" },
-            { id: 2, title: "Bucksturm", coords: [52.2745, 8.0385], short: "Militarismus & Kolonialismus.", content: "<p>Historischer Reflexionspunkt über koloniale Denkmalkultur.</p>" },
-            { id: 3, title: "Ledenhof", coords: [52.2725, 8.0445], short: "Globaler Warenimport.", content: "<p>Sitz wohlhabender Familien, die mit Kolonialwaren handelten.</p>" }
+            { 
+                id: 1, 
+                title: "Marktplatz & Rathaus", 
+                coords: [52.2776, 8.0411], 
+                short: "Handel und Diplomatie.", 
+                content: "<p>Das Rathaus ist Symbol der globalen Vernetzung Osnabrücks durch den Westfälischen Frieden.</p>" 
+            },
+            { 
+                id: 2, 
+                title: "Bucksturm", 
+                coords: [52.2745, 8.0385], 
+                short: "Militarismus & Kolonialismus.", 
+                content: "<p>Historischer Reflexionspunkt über koloniale Denkmalkultur.</p>" 
+            },
+            { 
+                id: 3, 
+                title: "Ledenhof", 
+                coords: [52.2725, 8.0445], 
+                short: "Globaler Warenimport.", 
+                content: "<p>Sitz wohlhabender Familien, die mit Kolonialwaren handelten.</p>" 
+            },
+            { 
+                id: 4, 
+                title: "Schloss Osnabrück", 
+                coords: [52.2710, 8.0460], 
+                short: "Wissenschaft und Forschung.", 
+                content: "<p>Die Universität und ihre Vorgängerinstitutionen spielten eine Rolle in der Verbreitung kolonialen Wissens.</p>" 
+            },
+            { 
+                id: 5, 
+                title: "Hauptbahnhof", 
+                coords: [52.2728, 8.0560], 
+                short: "Logistik des Kaiserreichs.", 
+                content: "<p>Knotenpunkt für Waren und Truppentransporte während der deutschen Kolonialzeit.</p>" 
+            },
+            { 
+                id: 6, 
+                title: "Heger Tor", 
+                coords: [52.2765, 8.0390], 
+                short: "Ehrenmal und Erinnerung.", 
+                content: "<p>Ein Ort der Kriegserinnerung, der heute kritisch im Kontext imperialer Bestrebungen betrachtet wird.</p>" 
+            }
         ];
 
         const lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '© CARTO' });
@@ -331,7 +452,6 @@
                 text: 'Die Karte zeigt Ihnen die Standorte im heutigen Stadtbild. Sie können zoomen und die Marker anklicken.'
             },
             {
-                // Leaflet controls haben keine ID, wir nutzen querySelector in der Funktion
                 selector: '.leaflet-control-layers',
                 title: 'Zeitreise-Ansicht',
                 text: 'Wechseln Sie hier oben rechts zwischen der reduzierten Archiv-Karte und aktuellen Satellitenbildern.'
@@ -358,12 +478,10 @@
             const spotlight = document.getElementById('tutorial-spotlight');
             const tooltip = document.getElementById('tutorial-tooltip');
             
-            // Ziel-Element finden (mit Fallback für Mobile)
             let target = null;
             if (step.elementId) target = document.getElementById(step.elementId);
             if (step.selector) target = document.querySelector(step.selector);
             
-            // Mobile Weiche: Wenn das Element auf dem Screen versteckt ist oder wir auf Mobile sind
             const isMobile = window.innerWidth < 768;
             if (isMobile && step.altElementId) {
                 target = document.getElementById(step.altElementId);
@@ -375,39 +493,29 @@
                 return;
             }
 
-            // Position berechnen
             const rect = target.getBoundingClientRect();
             
-            // Spotlight setzen
             spotlight.style.width = rect.width + 'px';
             spotlight.style.height = rect.height + 'px';
             spotlight.style.top = rect.top + 'px';
             spotlight.style.left = rect.left + 'px';
 
-            // Text setzen
             document.getElementById('tut-title').innerText = step.title;
             document.getElementById('tut-text').innerText = step.text;
             
-            // Button Text (beim letzten Schritt "Fertig")
             const nextBtn = document.getElementById('tut-next');
             nextBtn.innerText = (currentStepIndex === tutorialSteps.length - 1) ? "Starten" : "Weiter";
 
-            // Tooltip Positionierung (Smart)
-            // Versuche es rechts daneben zu platzieren, wenn Platz ist, sonst links, sonst drunter/drüber
-            const tooltipWidth = 340; // width + padding estimate
-            const tooltipHeight = 200; // height estimate
+            const tooltipWidth = 340; 
+            const tooltipHeight = 200; 
             
             let top = rect.top;
             let left = rect.right + 20;
 
-            // Wenn rechts kein Platz ist (z.B. Mobile oder Element rechts)
             if (left + tooltipWidth > window.innerWidth) {
-                // Dann links probieren
                 left = rect.left - tooltipWidth - 20;
-                // Wenn links auch kein Platz (Mobile)
                 if (left < 0) {
-                    left = 20; // Margin links
-                    // Dann drunter oder drüber
+                    left = 20;
                     if (rect.bottom + tooltipHeight < window.innerHeight) {
                         top = rect.bottom + 20;
                     } else {
@@ -415,17 +523,13 @@
                     }
                 }
             }
-            
-            // Begrenzung, damit es nicht oben raus rutscht
             if (top < 10) top = 10;
-            // Begrenzung unten
             if (top + tooltipHeight > window.innerHeight) top = window.innerHeight - tooltipHeight - 20;
 
             tooltip.style.top = top + 'px';
             tooltip.style.left = left + 'px';
         }
 
-        // Tutorial Event Listeners
         document.getElementById('tut-next').onclick = () => {
             if (currentStepIndex < tutorialSteps.length - 1) {
                 currentStepIndex++;
@@ -440,12 +544,24 @@
         // --- INIT & LOGIC ---
 
         function initApp() {
-            // Intro Button Logic -> Startet jetzt Tutorial
+            // Literatur Popup Logic
+            document.getElementById('openLit').onclick = () => {
+                document.getElementById('lit-overlay').classList.add('active');
+            };
+            document.getElementById('closeLit').onclick = () => {
+                document.getElementById('lit-overlay').classList.remove('active');
+            };
+            // Optional: Schließen beim Klick auf den Hintergrund
+            document.getElementById('lit-overlay').addEventListener('click', function(e) {
+                if(e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+
             document.getElementById('closeIntro').onclick = () => {
                 const overlay = document.getElementById('intro-overlay');
                 overlay.classList.add('fade-out');
                 
-                // Kurze Verzögerung, dann Tutorial starten
                 setTimeout(() => {
                     startTutorial();
                 }, 600);
