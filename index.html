@@ -338,7 +338,7 @@
             <div class="p-6">
                 <div id="intro-view">
                     <h2 class="text-2xl mb-4 border-b border-gray-200 pb-2 font-serif">Stationen der Tour</h2>
-                    <p class="text-sm text-gray-600 mb-6">Wählen Sie einen Ort, um mehr über koloniale Verflechtungen zu erfahren.</p>
+                    <p class="text-sm text-gray-600 mb-6">Wählen Sie einen Ort, um mehr über koloniale Verflechtungen zu erfahren. <br><span class="text-xs text-red-500 font-bold bg-red-50 px-2 py-1 rounded inline-block mt-2">Korrektur-Modus aktiv: Marker verschiebbar!</span></p>
                     <div id="station-list" class="space-y-4"></div>
                 </div>
 
@@ -347,8 +347,8 @@
                         <svg class="mr-1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> Zurück zur Übersicht
                     </button>
                     <h2 id="detail-title" class="text-2xl mb-2 font-serif"></h2>
-                    <div id="detail-image" class="w-full h-48 bg-gray-200 rounded mb-4 flex items-center justify-center italic text-gray-400 text-sm border">
-                        
+                    <div id="detail-image" class="w-full h-48 bg-gray-200 rounded mb-4 overflow-hidden border relative">
+                        <!-- Bild wird dynamisch eingefügt -->
                     </div>
                     
                     <!-- Platzhalter für Multimedia (Dynamisch eingefügt) -->
@@ -425,58 +425,114 @@
             { 
                 id: 1, 
                 title: "Station I: Der Domplatz", 
-                coords: [52.277478, 8.043288], 
+                coords: [52.2775, 8.0440], 
                 short: "Vorplatz des Doms.", 
-                content: "<p>Der Domplatz als historisches Zentrum der Macht spielt eine zentrale Rolle in der Stadtgeschichte.</p>",
-                // PLATZHALTER FÜR MULTIMEDIA:
-                audio: "placeholder.mp3", // Wenn leer, wird kein Player angezeigt. Trage hier den Pfad ein.
-                model3d: "placeholder_model" // Wenn leer, kein 3D Button.
+                image: "images/station1.jpg",
+                content: `
+                    <h3 class="font-bold text-lg mb-2">Historischer Hintergrund</h3>
+                    <p>[Platzhalter: Beschreiben Sie hier die Bedeutung des Domplatzes im Mittelalter und der Frühen Neuzeit.]</p>
+                    
+                    <h3 class="font-bold text-lg mt-4 mb-2">Koloniale Spuren</h3>
+                    <p>[Platzhalter: Welche Verbindungen gibt es hier? Gedenktafeln, Gebäude von Kaufleuten oder Veranstaltungen?]</p>
+                `,
+                audio: "audio/station1.mp3", 
+                model3d: "" 
             },
             { 
                 id: 2, 
                 title: "Station II: Die Marienkirche", 
-                coords: [52.2775056, 8.0415786], 
+                coords: [52.2778, 8.0413], 
                 short: "Marktplatz und Kirche.", 
-                content: "<p>Die Marienkirche am Markt war ein zentraler Ort des bürgerlichen Lebens und Handels.</p>",
-                audio: "", // Kein Audio
-                model3d: "" // Kein 3D
+                image: "images/station2.jpg",
+                content: `
+                    <h3 class="font-bold text-lg mb-2">Historischer Hintergrund</h3>
+                    <p>[Platzhalter: Die Rolle der Marienkirche als Bürgerkirche am Markt.]</p>
+                    
+                    <h3 class="font-bold text-lg mt-4 mb-2">Koloniale Spuren</h3>
+                    <p>[Platzhalter: Gibt es hier Grabmäler oder Spendenhinweise von kolonialen Akteuren?]</p>
+                `,
+                audio: "audio/station2.mp3", 
+                model3d: "" 
             },
             { 
                 id: 3, 
                 title: "Station III: Das Heger Tor", 
-                coords: [52.2764088, 8.0385883], 
+                coords: [52.2765, 8.0378], 
                 short: "Erinnerungsort.", 
-                content: "<p>Das Heger Tor (Waterloo-Tor) dient als Denkmal, dessen Bedeutung heute kritisch hinterfragt wird.</p>",
-                audio: "placeholder_audio_hegertor.mp3", // Beispiel: Audio vorhanden
-                model3d: "" 
+                image: "images/station3.jpg",
+                content: `
+                    <h3 class="font-bold text-lg mb-2">Das Bauwerk</h3>
+                    <p>[Platzhalter: Baugeschichte des Heger Tors / Waterloo-Tors.]</p>
+                    
+                    <h3 class="font-bold text-lg mt-4 mb-2">Kritische Einordnung</h3>
+                    <p>[Platzhalter: Wie wird hier Krieg und Heldentum dargestellt? Welcher Bezug besteht zu imperialen Kriegen?]</p>
+                `,
+                audio: "audio/station3.mp3", 
+                model3d: "hegertor_scan" 
             },
             { 
                 id: 4, 
                 title: "Station IV: Museum und Kolonialismus", 
-                coords: [52.2755718, 8.0381643], 
+                coords: [52.2754, 8.0386], 
                 short: "Museumsquartier.", 
-                content: "<p>Im Museumsquartier wird die Geschichte der Stadt und ihrer globalen Verflechtungen aufgearbeitet.</p>" 
+                image: "images/station4.jpg",
+                content: `
+                    <h3 class="font-bold text-lg mb-2">Das Museumsquartier</h3>
+                    <p>[Platzhalter: Kurze Vorstellung des Museumsstandorts.]</p>
+                    
+                    <h3 class="font-bold text-lg mt-4 mb-2">Sammlungsgeschichte</h3>
+                    <p>[Platzhalter: Wie geht das Museum heute mit Objekten aus kolonialen Kontexten um?]</p>
+                `,
+                audio: "audio/station4.mp3", 
+                model3d: "" 
             },
             { 
                 id: 5, 
                 title: "Station V: Menschenschau", 
-                coords: [52.2715218, 8.0420793], 
+                coords: [52.2705, 8.0470], 
                 short: "Völkerschauen in Osnabrück.", 
-                content: "<p>Zwischen OsnabrückHalle und Schloss fanden einst diskriminierende 'Völkerschauen' statt.</p>" 
+                image: "images/station5.jpg",
+                content: `
+                    <h3 class="font-bold text-lg mb-2">Ort des Geschehens</h3>
+                    <p>[Platzhalter: Wo genau fanden diese Veranstaltungen statt?]</p>
+                    
+                    <h3 class="font-bold text-lg mt-4 mb-2">Hintergrund der 'Völkerschauen'</h3>
+                    <p>[Platzhalter: Erklären Sie das Phänomen der Völkerschauen und ihre rassistische Dimension im Kaiserreich.]</p>
+                `,
+                audio: "audio/station5.mp3", 
+                model3d: "" 
             },
             { 
                 id: 6, 
                 title: "Station VI: Die Erdteilallegorien", 
-                coords: [52.2710688, 8.0435063], 
+                coords: [52.2708, 8.0458], 
                 short: "Symbolik im Schlossgarten.", 
-                content: "<p>Die Statuen im Schlossgarten repräsentieren historische Weltbilder und koloniale Fantasien.</p>" 
+                image: "images/station6.jpg",
+                content: `
+                    <h3 class="font-bold text-lg mb-2">Die Skulpturen</h3>
+                    <p>[Platzhalter: Beschreibung der vier Figuren im Schlossgarten.]</p>
+                    
+                    <h3 class="font-bold text-lg mt-4 mb-2">Koloniale Ikonografie</h3>
+                    <p>[Platzhalter: Analyse der Darstellung von Afrika, Asien, Amerika und Europa. Welche Stereotype werden bedient?]</p>
+                `,
+                audio: "audio/station6.mp3", 
+                model3d: "erdteil_scan" 
             },
             { 
                 id: 7, 
                 title: "Station VII: Kolonialläden", 
-                coords: [52.2736122, 8.0480556], 
+                coords: [52.2735, 8.0510], 
                 short: "Handel am Neumarkt.", 
-                content: "<p>In der Nähe des Neumarkts verkauften Geschäfte einst Waren aus den Kolonien.</p>" 
+                image: "images/station7.jpg",
+                content: `
+                    <h3 class="font-bold text-lg mb-2">Handelsplatz Neumarkt</h3>
+                    <p>[Platzhalter: Die Bedeutung des Neumarkts für den Einzelhandel.]</p>
+                    
+                    <h3 class="font-bold text-lg mt-4 mb-2">Kolonialwaren im Alltag</h3>
+                    <p>[Platzhalter: Welche Produkte wurden hier verkauft? Wie warb man damals für Kaffee, Tee oder Tabak?]</p>
+                `,
+                audio: "audio/station7.mp3", 
+                model3d: "" 
             }
         ];
 
@@ -632,9 +688,23 @@
                     popupAnchor: [0, -20]
                 });
 
-                const marker = L.marker(station.coords, { icon: icon }).addTo(map);
+                // HIER IST DIE ÄNDERUNG: draggable: true
+                const marker = L.marker(station.coords, { icon: icon, draggable: true }).addTo(map);
                 
                 marker.bindPopup(`<div class="font-bold font-serif">${station.title}</div><button onclick="showDetail(${station.id})" class="text-accent-gold text-xs underline mt-1">Details</button>`, { className: 'custom-popup' });
+
+                // EVENT LISTENER FÜR DRAG END (Zeigt neue Koordinaten)
+                marker.on('dragend', function(event) {
+                    const position = marker.getLatLng();
+                    // Kopierfreundliches Popup
+                    marker.setPopupContent(`
+                        <div class="text-center">
+                            <strong class="text-red-600">Neue Koordinaten:</strong><br>
+                            <input type="text" value="[${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}]" class="border p-1 text-xs w-full mt-1 bg-gray-100" readonly onclick="this.select();">
+                            <p class="text-[10px] text-gray-500 mt-1">Kopieren und in den Code einfügen.</p>
+                        </div>
+                    `).openPopup();
+                });
 
                 const card = document.createElement('div');
                 card.className = 'station-card p-4 bg-white border border-gray-100 rounded shadow-sm cursor-pointer';
@@ -651,6 +721,17 @@
             document.getElementById('detail-title').innerText = station.title;
             document.getElementById('detail-content').innerHTML = station.content;
             
+            // --- IMAGE LOGIK ---
+            const imageContainer = document.getElementById('detail-image');
+            imageContainer.innerHTML = '';
+            
+            if (station.image) {
+                // Bild mit Fallback falls Datei nicht existiert
+                imageContainer.innerHTML = `<img src="${station.image}" alt="${station.title}" class="w-full h-48 object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center text-gray-400 text-xs italic p-4 text-center\'>Bild nicht gefunden:<br>${station.image}</div>';">`;
+            } else {
+                imageContainer.innerHTML = `<div class="w-full h-full flex items-center justify-center italic text-gray-400 text-sm">[Bildplatzhalter]</div>`;
+            }
+
             // --- MULTIMEDIA LOGIK ---
             const mediaContainer = document.getElementById('detail-media');
             mediaContainer.innerHTML = ''; // Vorher leeren
