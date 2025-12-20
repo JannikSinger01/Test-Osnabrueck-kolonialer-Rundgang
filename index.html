@@ -285,6 +285,9 @@
             <div id="modal-image-container" class="w-full h-64 bg-gray-200 relative overflow-hidden">
                 <!-- Bild kommt hier rein -->
             </div>
+            
+            <!-- Bildnachweis / Copyright -->
+            <div id="modal-image-copyright" class="w-full px-4 py-1 bg-gray-50 text-[10px] text-gray-500 text-right italic hidden border-b border-gray-100"></div>
 
             <div class="p-8">
                 <h2 id="modal-title" class="text-3xl font-serif text-[#2d3436] mb-4"></h2>
@@ -330,7 +333,7 @@
         </div>
     </div>
 
-    <!-- ARRIVAL PROMPT (NEU) -->
+    <!-- ARRIVAL PROMPT -->
     <div id="arrival-prompt" class="fixed bottom-24 right-6 bg-white p-4 rounded-xl shadow-2xl border-l-4 border-[#a67c00] z-[2000] hidden transform translate-y-10 opacity-0 w-72">
         <div class="flex justify-between items-start">
             <div>
@@ -460,12 +463,38 @@
 
     <script>
         const stations = [
+            {
+                id: 0,
+                title: "Start: So funktioniert der Rundgang",
+                coords: [52.2770, 8.0420], 
+                short: "Anleitung und Funktionen.",
+                image: "images/intro.jpg",
+                imageCopyright: "",
+                content: `
+                    <h3 class="font-bold text-lg mb-2">Herzlich Willkommen!</h3>
+                    <p>Dieser digitale Stadtrundgang führt Sie zu den Spuren der kolonialen Vergangenheit in Osnabrück.</p>
+                    
+                    <h4 class="font-bold mt-4">So nutzen Sie die App:</h4>
+                    <ul class="list-disc pl-5 mt-2 space-y-1">
+                        <li><strong>Orientierung:</strong> Die Bilder in der App helfen Ihnen, die Orte im heutigen Stadtbild wiederzuerkennen.</li>
+                        <li><strong>Audio-Guide:</strong> Sie möchten lieber hören statt lesen? Nutzen Sie den Audio-Player in jedem Fenster.</li>
+                        <li><strong>3D-Scans:</strong> Bei ausgewählten Stationen können Sie digitale 3D-Modelle der Objekte betrachten.</li>
+                        <li><strong>Flexibler Start:</strong> Sie können an jeder Station beginnen. Der <strong>Navigator</strong> (unten rechts) zeigt Ihnen immer den Weg zum nächstgelegenen Ziel.</li>
+                    </ul>
+                `,
+                audio: "audio/intro.mp3",
+                model3d: ""
+            },
             { 
                 id: 1, 
                 title: "Station I: Der Domplatz", 
                 coords: [52.2775, 8.0440], 
                 short: "Vorplatz des Doms.", 
+                // --- BILDER HIER EINFÜGEN ---
                 image: "images/station1.jpg",
+                // HIER AUTOR EINFÜGEN (Optional):
+                imageCopyright: "Name des Fotografen",
+                
                 content: `
                     <h3 class="font-bold text-lg mb-2">Historischer Hintergrund</h3>
                     <p>[Platzhalter: Beschreiben Sie hier die Bedeutung des Domplatzes im Mittelalter und der Frühen Neuzeit.]</p>
@@ -482,6 +511,8 @@
                 coords: [52.2778, 8.0413], 
                 short: "Marktplatz und Kirche.", 
                 image: "images/station2.jpg",
+                imageCopyright: "",
+                
                 content: `
                     <h3 class="font-bold text-lg mb-2">Historischer Hintergrund</h3>
                     <p>[Platzhalter: Die Rolle der Marienkirche als Bürgerkirche am Markt.]</p>
@@ -498,6 +529,8 @@
                 coords: [52.2765, 8.0378], 
                 short: "Erinnerungsort.", 
                 image: "images/station3.jpg",
+                imageCopyright: "",
+                
                 content: `
                     <h3 class="font-bold text-lg mb-2">Das Bauwerk</h3>
                     <p>[Platzhalter: Baugeschichte des Heger Tors / Waterloo-Tors.]</p>
@@ -514,6 +547,8 @@
                 coords: [52.2754, 8.0386], 
                 short: "Museumsquartier.", 
                 image: "images/station4.jpg",
+                imageCopyright: "",
+                
                 content: `
                     <h3 class="font-bold text-lg mb-2">Das Museumsquartier</h3>
                     <p>[Platzhalter: Kurze Vorstellung des Museumsstandorts.]</p>
@@ -530,6 +565,8 @@
                 coords: [52.2705, 8.0470], 
                 short: "Völkerschauen in Osnabrück.", 
                 image: "images/station5.jpg",
+                imageCopyright: "",
+                
                 content: `
                     <h3 class="font-bold text-lg mb-2">Ort des Geschehens</h3>
                     <p>[Platzhalter: Wo genau fanden diese Veranstaltungen statt?]</p>
@@ -546,6 +583,8 @@
                 coords: [52.2708, 8.0458], 
                 short: "Symbolik im Schlossgarten.", 
                 image: "images/station6.jpg",
+                imageCopyright: "",
+                
                 content: `
                     <h3 class="font-bold text-lg mb-2">Die Skulpturen</h3>
                     <p>[Platzhalter: Beschreibung der vier Figuren im Schlossgarten.]</p>
@@ -562,6 +601,8 @@
                 coords: [52.2735, 8.0510], 
                 short: "Handel am Neumarkt.", 
                 image: "images/station7.jpg",
+                imageCopyright: "",
+                
                 content: `
                     <h3 class="font-bold text-lg mb-2">Handelsplatz Neumarkt</h3>
                     <p>[Platzhalter: Die Bedeutung des Neumarkts für den Einzelhandel.]</p>
@@ -594,12 +635,12 @@
                 elementId: 'sidebar', // Desktop Ziel
                 altElementId: 'toggleSidebar', // Mobile Ziel
                 title: 'Historische Stationen',
-                text: 'Hier finden Sie alle Stationen. Ein Klick auf einen Eintrag öffnet das Detailfenster mit Bildern, Texten und Audio-Guides.'
+                text: 'Hier finden Sie alle Orte der Tour. Wählen Sie einen Eintrag aus, um mehr über die Geschichte und kolonialen Hintergründe zu erfahren.'
             },
             {
                 elementId: 'map', 
                 title: 'Interaktive Karte',
-                text: 'Zoomen und erkunden Sie die Karte. Sie können die runden Marker auch direkt anklicken, um Informationen zu erhalten.'
+                text: 'Die Karte zeigt Ihnen die Standorte im heutigen Stadtbild. Sie können zoomen und die Marker anklicken.'
             },
             {
                 selector: '.leaflet-control-layers',
@@ -608,8 +649,8 @@
             },
             {
                 elementId: 'navigator-panel',
-                title: 'GPS-Navigator & Ablauf',
-                text: 'Aktivieren Sie hier GPS. Wenn Sie eine Station erreichen, fragen wir kurz nach, bevor sich das Info-Fenster öffnet. Nach dem Lesen können Sie direkt per Button zur nächsten Station navigieren.'
+                title: 'GPS-Navigator',
+                text: 'Starten Sie hier den Tour-Modus. Sobald Sie Ihr GPS aktivieren, zeigen wir Ihnen den Weg und die Entfernung zur nächsten Station.'
             }
         ];
 
@@ -638,6 +679,7 @@
             }
 
             if (!target) {
+                console.error("Tutorial target not found", step);
                 endTutorial();
                 return;
             }
@@ -664,8 +706,11 @@
                 left = rect.left - tooltipWidth - 20;
                 if (left < 0) {
                     left = 20;
-                    if (rect.bottom + tooltipHeight < window.innerHeight) top = rect.bottom + 20;
-                    else top = rect.top - tooltipHeight - 20;
+                    if (rect.bottom + tooltipHeight < window.innerHeight) {
+                        top = rect.bottom + 20;
+                    } else {
+                        top = rect.top - tooltipHeight - 20;
+                    }
                 }
             }
             if (top < 10) top = 10;
@@ -715,29 +760,34 @@
 
             const listContainer = document.getElementById('station-list');
             stations.forEach(station => {
-                const icon = L.divIcon({
-                    className: 'number-icon',
-                    html: station.id,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15],
-                    popupAnchor: [0, -20]
-                });
-
-                const marker = L.marker(station.coords, { icon: icon, draggable: true }).addTo(map);
                 
-                marker.on('click', () => showDetail(station.id));
+                // MARKER LOGIC: Nur für Stationen mit ID > 0
+                if (station.id !== 0) {
+                    const icon = L.divIcon({
+                        className: 'number-icon',
+                        html: station.id,
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15],
+                        popupAnchor: [0, -20]
+                    });
 
-                marker.on('dragend', function(event) {
-                    const position = marker.getLatLng();
-                    marker.bindPopup(`
-                        <div class="text-center">
-                            <strong class="text-red-600">Neue Koordinaten:</strong><br>
-                            <input type="text" value="[${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}]" class="border p-1 text-xs w-full mt-1 bg-gray-100" readonly onclick="this.select();">
-                            <p class="text-[10px] text-gray-500 mt-1">Kopieren und in den Code einfügen.</p>
-                        </div>
-                    `).openPopup();
-                });
+                    const marker = L.marker(station.coords, { icon: icon, draggable: true }).addTo(map);
+                    
+                    marker.on('click', () => showDetail(station.id));
 
+                    marker.on('dragend', function(event) {
+                        const position = marker.getLatLng();
+                        marker.bindPopup(`
+                            <div class="text-center">
+                                <strong class="text-red-600">Neue Koordinaten:</strong><br>
+                                <input type="text" value="[${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}]" class="border p-1 text-xs w-full mt-1 bg-gray-100" readonly onclick="this.select();">
+                                <p class="text-[10px] text-gray-500 mt-1">Kopieren und in den Code einfügen.</p>
+                            </div>
+                        `).openPopup();
+                    });
+                }
+
+                // LIST CARD LOGIC: Für ALLE Stationen (inkl. 0)
                 const card = document.createElement('div');
                 card.className = 'station-card p-4 bg-white border border-gray-100 rounded shadow-sm cursor-pointer transition';
                 card.innerHTML = `<h3 class="font-bold font-serif text-lg">${station.title}</h3><p class="text-[11px] text-gray-400">${station.short}</p>`;
@@ -762,6 +812,15 @@
                 imgContainer.style.display = 'block';
             } else {
                 imgContainer.style.display = 'none';
+            }
+
+            // --- BILDNACHWEIS LOGIK ---
+            const captionContainer = document.getElementById('modal-image-copyright');
+            if (station.image && station.imageCopyright) {
+                captionContainer.innerText = "Foto: " + station.imageCopyright;
+                captionContainer.classList.remove('hidden');
+            } else {
+                captionContainer.classList.add('hidden');
             }
 
             const mediaContainer = document.getElementById('modal-media');
